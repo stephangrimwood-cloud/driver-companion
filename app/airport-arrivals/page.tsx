@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Arrival = {
   flight: string;
@@ -56,7 +55,7 @@ function isInternationalArrival(from: string) {
 }
 
 function getPeakWindows(arrivals: any[]) {
-  const hourCounts: Record<string, number> = {};
+  const hourCounts: Record<number, number> = {};
 
   arrivals.forEach((arrival) => {
     const time = arrival.estimated || arrival.scheduled;
@@ -68,7 +67,7 @@ function getPeakWindows(arrivals: any[]) {
   });
 
   const busyHours = Object.entries(hourCounts)
-    .filter(([, count]) => count >= 3)
+    .filter(([, count]) => count >= 5)
     .map(([hour]) => Number(hour))
     .sort((a, b) => a - b);
 
@@ -76,55 +75,72 @@ function getPeakWindows(arrivals: any[]) {
     return null;
   }
 
-  const startHour = busyHours[0];
-  const endHour = busyHours[busyHours.length - 1] + 1;
+  const windows: string[] = [];
+  let startHour = busyHours[0];
+  let previousHour = busyHours[0];
 
-  return `${String(startHour).padStart(2, "0")}:00 → ${String(endHour).padStart(2, "0")}:00`;
+  for (let i = 1; i < busyHours.length; i++) {
+    const currentHour = busyHours[i];
+
+    if (currentHour === previousHour + 1) {
+      previousHour = currentHour;
+    } else {
+      windows.push(
+        `${String(startHour).padStart(2, "0")}:00 → ${String(
+          previousHour + 1
+        ).padStart(2, "0")}:00`
+      );
+
+      startHour = currentHour;
+      previousHour = currentHour;
+    }
+  }
+
+  windows.push(
+    `${String(startHour).padStart(2, "0")}:00 → ${String(
+      previousHour + 1
+    ).padStart(2, "0")}:00`
+  );
+
+  return windows;
 }
 
-function getStartOfWeek(date: Date) {
-  const copiedDate = new Date(date);
-  const day = copiedDate.getDay();
-  const difference = day === 0 ? -6 : 1 - day;
+  export default function AirportArrivalsPage() {
 
-  copiedDate.setDate(copiedDate.getDate() + difference);
-  copiedDate.setHours(0, 0, 0, 0);
-
-  return copiedDate;
-}
-
-const weekStart = getStartOfWeek(new Date());
-
-const arrivalWeek: ArrivalDay[] = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-].map((day, index) => {
-  const date = new Date(weekStart);
-  date.setDate(weekStart.getDate() + index);
-
-  return {
-    day,
-    date: formatDate(date),
-    airportDate: formatAirportDate(date),
-    international: 0,
-    domestic: 0,
-    peakWindows: [],
-    arrivals: [],
-  };
-});
-
-export default function AirportArrivalsPage() {
-  const router = useRouter();
     const [openDay, setOpenDay] = useState<string | null>(null);
     const [liveArrivals, setLiveArrivals] = useState<any[]>([]);
     const [lastUpdated, setLastUpdated] = useState<string>("");
     const [refreshError, setRefreshError] = useState(false);
-    useEffect(() => {
+
+    const today = new Date();
+
+          const tomorrow = new Date(today);
+          tomorrow.setDate(today.getDate() + 1);
+
+          const arrivalDays: ArrivalDay[] = [
+            {
+              day: "Today",
+              date: formatDate(today),
+              airportDate: formatAirportDate(today),
+              international: 0,
+              domestic: 0,
+              peakWindows: [],
+              arrivals: [],
+            },
+            {
+              day: "Tomorrow",
+              date: formatDate(tomorrow),
+              airportDate: formatAirportDate(tomorrow),
+              international: 0,
+              domestic: 0,
+              peakWindows: [],
+              arrivals: [],
+            },
+          ];
+
+        useEffect(() => {
+
+
   async function loadArrivals() {
   try {
     const todayResponse = await fetch("/api/airport-arrivals?day=today");
@@ -220,7 +236,7 @@ export default function AirportArrivalsPage() {
               </h1>
 
               <p className="mt-2 text-sm text-zinc-300">
-                Weekly inbound flight activity and peak arrival windows.
+                Live Cairns Airport arrivals for today and tomorrow.
               </p>
             </div>
 
@@ -250,7 +266,7 @@ export default function AirportArrivalsPage() {
         </section>
 
         <section className="space-y-3">
-          {arrivalWeek.map((day) => {
+          {arrivalDays.map((day) => {
             const isOpen = openDay === day.day;
             const matchingArrivals = liveArrivals.filter(
                 (arrival) => arrival.date === day.airportDate
@@ -301,9 +317,15 @@ export default function AirportArrivalsPage() {
                     </div>
 
                     <div className="pt-2 text-right text-sm text-zinc-300">
-                      <div>Peak</div>
+                      <div>Busy Windows</div>
                       <div className="text-zinc-100">
-                        {peakWindows ?? "No peak window"}
+                        {Array.isArray(peakWindows) ? (
+                          peakWindows.map((window) => (
+                            <div key={window}>{window}</div>
+                          ))
+                        ) : (
+                          "No busy windows"
+                        )}
                       </div>
                     </div>
                   </div>
