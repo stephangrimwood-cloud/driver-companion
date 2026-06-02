@@ -12,6 +12,38 @@ function formatDate(dateString: string) {
   });
 }
 
+function getArrivalSize(passengers: number) {
+  if (passengers >= 2500) {
+    return "major";
+  }
+
+  if (passengers >= 1000) {
+    return "medium";
+  }
+
+  return "small";
+}
+
+function getArrivalDot(passengers: number) {
+  const size = getArrivalSize(passengers);
+
+  if (size === "major") {
+    return (
+      <span className="inline-block h-3 w-3 rounded-full bg-red-500" />
+    );
+  }
+
+  if (size === "medium") {
+    return (
+      <span className="inline-block h-3 w-3 rounded-full bg-orange-500" />
+    );
+  }
+
+  return (
+    <span className="inline-block h-3 w-3 rounded-full bg-green-500" />
+  );
+}
+
 export default function CruiseSchedulePage() {
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -72,15 +104,15 @@ export default function CruiseSchedulePage() {
               <p>Arrival Size</p>
 
               <p className="mt-1">
-                🟢 Small (&lt;1000 passengers)
+                🟢 Small (&lt;1000 pax)
               </p>
 
               <p>
-                🟠 Medium (1000-2499 passengers)
+                🟠 Medium (1000-2499 pax)
               </p>
 
               <p>
-                🔴 Major (2500+ passengers)
+                🔴 Major (2500+ pax)
               </p>
             </div>
 
@@ -182,9 +214,10 @@ export default function CruiseSchedulePage() {
                     {cruise.arrival} → {cruise.departure}
                   </p>
 
-                  <p className="text-right text-sm font-semibold text-amber-300">
-                    {cruise.passengers} pax
-                  </p>
+                  <div className="flex items-center justify-end gap-2 text-right font-semibold text-amber-400">
+                    {getArrivalDot(cruise.passengers)}
+                    <span>{cruise.passengers} pax</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -237,9 +270,10 @@ export default function CruiseSchedulePage() {
                       {cruise.ship}
                     </p>
 
-                    <p className="text-sm font-semibold text-amber-300">
-                      {cruise.passengers} pax
-                    </p>
+                    <div className="flex w-24 shrink-0 items-center justify-end gap-2 text-right text-sm font-semibold text-amber-300">
+                      {getArrivalDot(cruise.passengers)}
+                      <span>{cruise.passengers} pax</span>
+                    </div>
                   </div>
 
                 </div>
