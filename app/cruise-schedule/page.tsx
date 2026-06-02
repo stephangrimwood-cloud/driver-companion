@@ -69,17 +69,23 @@ export default function CruiseSchedulePage() {
               </p>
 
             <div className="mt-2 text-xs text-zinc-400">
-              <p>Arrival Size:</p>
-              <p className="mt-1">
-                🟢 Small (&lt;1000){" "}
-                <span className="mx-2">🟠 Medium (1000-2499)</span>
-                🔴 Major (2500+)
-              </p>
-           </div>
+              <p>Arrival Size</p>
 
+              <p className="mt-1">
+                🟢 Small (&lt;1000 passengers)
+              </p>
+
+              <p>
+                🟠 Medium (1000-2499 passengers)
+              </p>
+
+              <p>
+                🔴 Major (2500+ passengers)
+              </p>
             </div>
 
-            <Link
+            </div>
+             <Link
               href="/"
               className="shrink-0 rounded-xl border border-amber-500/40 bg-gradient-to-b from-[#4a4030] to-[#2d2924] px-4 py-2 text-sm font-semibold text-amber-100 transition hover:border-amber-400/60 hover:from-[#5a4a34] hover:to-[#35302a] hover:text-white"
             >
