@@ -1,37 +1,35 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
 const cruiseSchedule = [
   {
     date: "2026-06-02",
-    day: "Tuesday",
-    ship: "VISTA",
-    arrival: "09:38",
-    departure: "18:00",
-    passengers: "1,150",
-    crew: "800",
-    agent: "Not listed",
+    ship: "Carnival Encounter",
+    arrival: "10:00",
+    departure: "18:30",
+    passengers: 2596,
+    crew: 1100,
+    agent: "INCHCAPE",
   },
   {
     date: "2026-06-26",
-    day: "Friday",
     ship: "Carnival Adventure",
-    arrival: "10:00",
-    departure: "18:15",
-    passengers: "1,100",
-    crew: "450",
-    agent: "Tropical Reef Shipping",
+    arrival: "08:00",
+    departure: "16:00",
+    passengers: 2636,
+    crew: 1100,
+    agent: "INCHCAPE",
   },
   {
     date: "2026-06-28",
-    day: "Sunday",
-    ship: "Carnival Encounter",
+    ship: "Carnival Splendor",
     arrival: "09:00",
-    departure: "18:05",
-    passengers: "1,150",
-    crew: "500",
-    agent: "Not listed",
+    departure: "17:30",
+    passengers: 3016,
+    crew: 1150,
+    agent: "INCHCAPE",
   },
 ];
 
@@ -45,6 +43,7 @@ function formatDate(dateString: string) {
 
 export default function CruiseSchedulePage() {
   const now = new Date();
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
 function getCruiseArrivalDateTime(cruise: (typeof cruiseSchedule)[number]) {
   return new Date(`${cruise.date}T${cruise.arrival}:00`);
@@ -68,6 +67,12 @@ const upcomingCruises = cruiseSchedule.filter((cruise) => {
 
 const nextCruise = currentCruise ?? upcomingCruises[0];
 const remainingCruises = upcomingCruises.slice(0, 2);
+
+const selectedYearCruises = selectedYear
+  ? cruiseSchedule.filter((cruise) =>
+      cruise.date.startsWith(String(selectedYear))
+    )
+  : [];
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
@@ -93,7 +98,7 @@ const remainingCruises = upcomingCruises.slice(0, 2);
           </div>
         </section>
 
-        {nextCruise && (
+        {currentCruise ? (
           <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#3b352b] to-[#2c2925] p-4 shadow-lg">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
               Current Vessel in Port
@@ -101,16 +106,16 @@ const remainingCruises = upcomingCruises.slice(0, 2);
 
             <div className="mt-4 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">
               <span>
-                {nextCruise.day} · {formatDate(nextCruise.date)}
+                {formatDate(currentCruise.date)}
               </span>
 
               <span>
-                {nextCruise.arrival} — {nextCruise.departure}
+                {currentCruise.arrival} — {currentCruise.departure}
               </span>
             </div>
 
             <h2 className="mt-4 text-4xl font-black tracking-tight text-white">
-              {nextCruise.ship}
+              {currentCruise.ship}
             </h2>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
@@ -120,7 +125,7 @@ const remainingCruises = upcomingCruises.slice(0, 2);
                 </p>
 
                 <p className="mt-1 text-2xl font-black text-white">
-                  {nextCruise.passengers}
+                  {currentCruise.passengers}
                 </p>
               </div>
 
@@ -130,7 +135,7 @@ const remainingCruises = upcomingCruises.slice(0, 2);
                 </p>
 
                 <p className="mt-1 text-2xl font-black text-white">
-                  {nextCruise.crew}
+                  {currentCruise.crew}
                 </p>
               </div>
             </div>
@@ -138,11 +143,30 @@ const remainingCruises = upcomingCruises.slice(0, 2);
             <p className="mt-4 text-sm text-zinc-400">
               Agent:{" "}
               <span className="font-semibold text-zinc-200">
-                {nextCruise.agent}
+                {currentCruise.agent}
               </span>
             </p>
           </section>
-        )}
+            ) : (
+              <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#3b352b] to-[#2c2925] p-4 shadow-lg">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
+                  Current Vessel in Port
+                </p>
+
+                <h2 className="mt-4 text-2xl font-black tracking-tight text-white">
+                  No vessel currently in port.
+                </h2>
+
+                {nextCruise && (
+                  <p className="mt-4 text-sm text-zinc-400">
+                    Next arrival:{" "}
+                    <span className="font-semibold text-zinc-200">
+                      {nextCruise.ship} · {formatDate(nextCruise.date)}
+                    </span>
+                  </p>
+                )}
+              </section>
+            )}
 
         <section className="rounded-2xl border border-[#4a4a4b] bg-[#3a3a3b] p-4 shadow-lg">
           <h2 className="text-lg font-semibold text-white">
@@ -158,7 +182,7 @@ const remainingCruises = upcomingCruises.slice(0, 2);
                 <p className="font-semibold text-white">{cruise.ship}</p>
 
                 <p className="mt-1 text-sm text-zinc-400">
-                  {cruise.day}, {formatDate(cruise.date)}
+                  {formatDate(cruise.date)}
                 </p>
 
                 <p className="mt-1 text-sm text-zinc-300">
@@ -171,21 +195,50 @@ const remainingCruises = upcomingCruises.slice(0, 2);
         </section>
 
         <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <a
-            href="https://portsnorth-web.s3.ap-southeast-2.amazonaws.com/CruiseSchedule.pdf"
-            target="_blank"
-            className="rounded-xl border border-[#5e5e60] bg-[#303031] px-4 py-3 text-center text-sm font-semibold text-zinc-200"
+          <button
+            onClick={() => {
+              setSelectedYear(2026);
+            }}
+            className="rounded-xl border border-[#5e5e60] bg-[#303031] px-4 py-3 text-sm font-semibold text-zinc-200"
           >
             2026 Schedule
-          </a>
+          </button>
 
           <button
-            disabled
-            className="rounded-xl border border-[#4a4a4b] bg-[#2b2b2c] px-4 py-3 text-sm font-semibold text-zinc-500"
+            onClick={() => setSelectedYear(2027)}
+            className="rounded-xl border border-[#5e5e60] bg-[#303031] px-4 py-3 text-sm font-semibold text-zinc-200"
           >
             2027 Schedule
           </button>
         </section>
+        {selectedYear && (
+            <section className="rounded-2xl border border-[#4a4a4b] bg-[#303031] p-4">
+              <h2 className="text-lg font-bold text-white">
+                {selectedYear} Schedule
+              </h2>
+
+              <div className="mt-4 space-y-3">
+                {selectedYearCruises.map((cruise) => (
+                  <div
+                    key={`${cruise.date}-${cruise.ship}`}
+                    className="rounded-xl bg-[#2b2b2c] p-3"
+                  >
+                    <p className="text-sm font-semibold text-white">
+                      {cruise.ship}
+                    </p>
+
+                    <p className="mt-1 text-xs text-zinc-400">
+                      {formatDate(cruise.date)}
+                    </p>
+
+                    <p className="mt-1 text-xs text-zinc-300">
+                      {cruise.arrival} — {cruise.departure} · {cruise.passengers} passengers
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
       </div>
     </main>
   );
