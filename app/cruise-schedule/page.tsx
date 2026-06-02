@@ -262,11 +262,11 @@ export default function CruiseSchedulePage() {
               {selectedYearCruises.map((cruise) => (
                 <div key={`${cruise.date}-${cruise.ship}`} className="py-4">
                   <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm text-zinc-400">
+                    <p className="w-20 shrink-0 text-sm text-zinc-400">
                       {formatDate(cruise.date)}
                     </p>
 
-                    <p className="flex-1 pl-4 text-sm font-semibold text-white">
+                    <p className="min-w-0 flex-1 truncate text-sm font-semibold text-white">
                       {cruise.ship}
                     </p>
 
