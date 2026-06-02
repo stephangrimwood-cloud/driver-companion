@@ -12,6 +12,13 @@ function formatDate(dateString: string) {
   });
 }
 
+function formatShortDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString("en-AU", {
+    day: "2-digit",
+    month: "2-digit",
+  });
+}
+
 function getArrivalSize(passengers: number) {
   if (passengers >= 2500) {
     return "major";
@@ -63,10 +70,16 @@ export default function CruiseSchedulePage() {
     return arrivalDateTime <= now && departureDateTime >= now;
   });
 
-  const upcomingCruises = cruiseSchedule.filter((cruise) => {
+  const upcomingCruises = cruiseSchedule
+  .filter((cruise) => {
     const arrivalDateTime = getCruiseArrivalDateTime(cruise);
     return arrivalDateTime > now;
-  });
+  })
+  .sort(
+    (a, b) =>
+      getCruiseArrivalDateTime(a).getTime() -
+      getCruiseArrivalDateTime(b).getTime()
+  );
 
   const nextCruise = currentCruise ?? upcomingCruises[0];
   const remainingCruises = upcomingCruises.slice(0, 2);
@@ -79,14 +92,21 @@ export default function CruiseSchedulePage() {
         .map((cruise) => `${cruise!.date}-${cruise!.ship}`);
 
       const selectedYearCruises = selectedYear
-        ? cruiseSchedule.filter(
-            (cruise) =>
-              cruise.date.startsWith(String(selectedYear)) &&
-              !featuredCruiseKeys.includes(`${cruise.date}-${cruise.ship}`)
-          )
+        ? cruiseSchedule
+            .filter(
+              (cruise) =>
+                cruise.date.startsWith(String(selectedYear)) &&
+                getCruiseArrivalDateTime(cruise) >= now &&
+                !featuredCruiseKeys.includes(`${cruise.date}-${cruise.ship}`)
+            )
+            .sort(
+              (a, b) =>
+                new Date(a.date).getTime() - new Date(b.date).getTime()
+            )
         : [];
 
   return (
+
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
       <div className="mx-auto max-w-md space-y-5">
         <section className="rounded-2xl border border-[#4a4a4b] bg-[#3a3a3b] p-4 shadow-lg">
@@ -180,14 +200,6 @@ export default function CruiseSchedulePage() {
               No vessel currently in port.
             </h2>
 
-            {nextCruise && (
-              <p className="mt-4 text-sm text-zinc-400">
-                Next arrival:{" "}
-                <span className="font-semibold text-zinc-200">
-                  {nextCruise.ship} · {formatDate(nextCruise.date)}
-                </span>
-              </p>
-            )}
           </section>
         )}
 
@@ -263,7 +275,7 @@ export default function CruiseSchedulePage() {
                 <div key={`${cruise.date}-${cruise.ship}`} className="py-2.5">
                   <div className="flex items-start justify-between gap-4">
                     <p className="w-20 shrink-0 text-sm text-zinc-400">
-                      {formatDate(cruise.date)}
+                      {formatShortDate(cruise.date)}
                     </p>
 
                     <div className="text-right">
