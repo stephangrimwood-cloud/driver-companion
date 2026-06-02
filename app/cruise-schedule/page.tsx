@@ -44,16 +44,30 @@ function formatDate(dateString: string) {
 }
 
 export default function CruiseSchedulePage() {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
 
-  const upcomingCruises = cruiseSchedule.filter((cruise) => {
-    const cruiseDate = new Date(cruise.date);
-    return cruiseDate >= today;
-  });
+function getCruiseArrivalDateTime(cruise: (typeof cruiseSchedule)[number]) {
+  return new Date(`${cruise.date}T${cruise.arrival}:00`);
+}
 
-  const nextCruise = upcomingCruises[0];
-  const remainingCruises = upcomingCruises.slice(1);
+function getCruiseDepartureDateTime(cruise: (typeof cruiseSchedule)[number]) {
+  return new Date(`${cruise.date}T${cruise.departure}:00`);
+}
+
+const currentCruise = cruiseSchedule.find((cruise) => {
+  const arrivalDateTime = getCruiseArrivalDateTime(cruise);
+  const departureDateTime = getCruiseDepartureDateTime(cruise);
+
+  return arrivalDateTime <= now && departureDateTime >= now;
+});
+
+const upcomingCruises = cruiseSchedule.filter((cruise) => {
+  const arrivalDateTime = getCruiseArrivalDateTime(cruise);
+  return arrivalDateTime > now;
+});
+
+const nextCruise = currentCruise ?? upcomingCruises[0];
+const remainingCruises = upcomingCruises.slice(0, 2);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
@@ -82,7 +96,7 @@ export default function CruiseSchedulePage() {
         {nextCruise && (
           <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#3b352b] to-[#2c2925] p-4 shadow-lg">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">
-              Next Cruise Ship Arrival
+              Current Vessel in Port
             </p>
 
             <div className="mt-4 flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">
@@ -132,7 +146,7 @@ export default function CruiseSchedulePage() {
 
         <section className="rounded-2xl border border-[#4a4a4b] bg-[#3a3a3b] p-4 shadow-lg">
           <h2 className="text-lg font-semibold text-white">
-            Remaining Cruises
+            Upcoming Arrivals
           </h2>
 
           <div className="mt-3 space-y-3">
