@@ -195,7 +195,7 @@ export default function Home() {
                             />
                 <MoneyInput label="Less Owner Dockets" value={dockets} setValue={setDockets} />
                 <MoneyInput label="Less Fuel Cash (if any)" value={fuel} setValue={setFuel} />
-                <MoneyInput label="Less EFTPOS" value={eftpos} setValue={setEftpos} />
+                <MoneyInput label="Less EFTPOS (Enter printout total)" value={eftpos} setValue={setEftpos} />
                 </section>
 
                 <section className="space-y-3 rounded-2xl bg-[#3a3a3b] p-4">
