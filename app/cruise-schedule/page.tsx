@@ -260,7 +260,7 @@ export default function CruiseSchedulePage() {
 
             <div className="mt-4 divide-y divide-[#4a4a4b]">
               {selectedYearCruises.map((cruise) => (
-                <div key={`${cruise.date}-${cruise.ship}`} className="py-4">
+                <div key={`${cruise.date}-${cruise.ship}`} className="py-3">
                   <div className="flex items-start justify-between gap-4">
                     <p className="w-20 shrink-0 text-sm text-zinc-400">
                       {formatDate(cruise.date)}
