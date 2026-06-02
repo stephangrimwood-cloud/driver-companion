@@ -7,7 +7,7 @@ import { cruiseSchedule } from "../data/cruiseSchedule";
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("en-AU", {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
     year: "numeric",
   });
 }
