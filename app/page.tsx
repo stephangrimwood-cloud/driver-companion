@@ -74,7 +74,7 @@ export default function DriverHubPage() {
           </Link>
 
             <footer className="pb-4 pt-2 text-center text-xs text-zinc-400">
-                Stephan Grimwood • Version 1.5 • May 2026
+                Stephan Grimwood • Version 1.5 • June 2026
             </footer>
 
 
