@@ -8,7 +8,7 @@ export type CruiseShip = {
 
 export const cruiseSchedule: CruiseShip[] = [
 
-  //2026 ENTRIES START HERE
+  // ===== 2026 =====
 
   {
   date: "2026-06-02",
@@ -302,9 +302,7 @@ export const cruiseSchedule: CruiseShip[] = [
   passengers: 72,
 },
 
-// ===== 2026 =====
-
-//2027 ENTRIES START HERE
+// ===== 2027 =====
 
 {
   date: "2027-01-01",
@@ -812,20 +810,422 @@ export const cruiseSchedule: CruiseShip[] = [
   passengers: 2602,
 },
 
-// ===== 2027 =====
-
-//2028 ENTRIES START HERE
-
-
-
 // ===== 2028 =====
 
-
-
-//2029 ENTRIES START HERE
-
-
+{
+  date: "2028-01-07",
+  ship: "AIDAdiva",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 2050,
+},
+{
+  date: "2028-01-09",
+  ship: "Westerdam",
+  arrival: "06:00",
+  departure: "18:00",
+  passengers: 1968,
+},
+{
+  date: "2028-01-12",
+  ship: "Carnival Luminosa",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 2260,
+},
+{
+  date: "2028-01-19",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "07:00",
+  passengers: 2596,
+},
+{
+  date: "2028-01-25",
+  ship: "Seven Seas Mariner",
+  arrival: "07:00",
+  departure: "23:59",
+  passengers: 708,
+},
+{
+  date: "2028-01-30",
+  ship: "Seabourn Sojourn",
+  arrival: "11:00",
+  departure: "10:00",
+  passengers: 450,
+},
+{
+  date: "2028-02-01",
+  ship: "Carnival Luminosa",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 2260,
+},
+{
+  date: "2028-02-06",
+  ship: "Costa Deliziosa",
+  arrival: "08:00",
+  departure: "17:00",
+  passengers: 2260,
+},
+{
+  date: "2028-02-07",
+  ship: "Vasco da Gama",
+  arrival: "15:30",
+  departure: "20:00",
+  passengers: 71,
+},
+{
+  date: "2028-02-09",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "16:30",
+  passengers: 2596,
+},
+{
+  date: "2028-02-11",
+  ship: "Seven Seas Splendor",
+  arrival: "08:00",
+  departure: "23:59",
+  passengers: 746,
+},
+{
+  date: "2028-02-16",
+  ship: "Carnival Luminosa",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 2260,
+},
+{
+  date: "2028-02-20",
+  ship: "Viking Vesta",
+  arrival: "13:00",
+  departure: "23:00",
+  passengers: 998,
+},
+{
+  date: "2028-02-23",
+  ship: "Regatta",
+  arrival: "09:00",
+  departure: "23:00",
+  passengers: 698,
+},
+{
+  date: "2028-02-24",
+  ship: "Viking Venus",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 930,
+},
+{
+  date: "2028-03-01",
+  ship: "Arcadia",
+  arrival: "07:00",
+  departure: "18:00",
+  passengers: 2094,
+},
+{
+  date: "2028-03-01",
+  ship: "Carnival Encounter",
+  arrival: "09:00",
+  departure: "18:30",
+  passengers: 2596,
+},
+{
+  date: "2028-03-02",
+  ship: "Silver Moon",
+  arrival: "14:00",
+  departure: "19:00",
+  passengers: 576,
+},
+{
+  date: "2028-03-03",
+  ship: "Carnival Splendor",
+  arrival: "08:00",
+  departure: "17:00",
+  passengers: 3016,
+},
+{
+  date: "2028-03-03",
+  ship: "Zaandam",
+  arrival: "10:00",
+  departure: "17:00",
+  passengers: 1432,
+},
+{
+  date: "2028-03-04",
+  ship: "Azamara Pursuit",
+  arrival: "08:00",
+  departure: "22:00",
+  passengers: 704,
+},
+{
+  date: "2028-03-07",
+  ship: "Azamara Onward",
+  arrival: "13:00",
+  departure: "20:00",
+  passengers: 672,
+},
+{
+  date: "2028-03-08",
+  ship: "MSC Magnifica",
+  arrival: "08:00",
+  departure: "16:00",
+  passengers: 2506,
+},
+{
+  date: "2028-03-09",
+  ship: "Viking Orion",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 928,
+},
+{
+  date: "2028-03-11",
+  ship: "Seven Seas Mariner",
+  arrival: "10:30",
+  departure: "20:30",
+  passengers: 708,
+},
+{
+  date: "2028-03-13",
+  ship: "Pacific World",
+  arrival: "10:00",
+  departure: "21:00",
+  passengers: 2016,
+},
+{
+  date: "2028-03-15",
+  ship: "Carnival Luminosa",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 2260,
+},
+{
+  date: "2028-03-17",
+  ship: "Volendam",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 1432,
+},
+{
+  date: "2028-03-18",
+  ship: "Nautica",
+  arrival: "11:00",
+  departure: "21:00",
+  passengers: 698,
+},
+{
+  date: "2028-03-19",
+  ship: "Queen Elizabeth",
+  arrival: "12:00",
+  departure: "17:00",
+  passengers: 2081,
+},
+{
+  date: "2028-03-22",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "16:00",
+  passengers: 2596,
+},
+{
+  date: "2028-03-24",
+  ship: "Grand Princess",
+  arrival: "07:00",
+  departure: "17:00",
+  passengers: 2602,
+},
+{
+  date: "2028-03-28",
+  ship: "Crown Princess",
+  arrival: "07:00",
+  departure: "21:00",
+  passengers: 3062,
+},
+{
+  date: "2028-04-12",
+  ship: "Carnival Encounter",
+  arrival: "09:00",
+  departure: "19:00",
+  passengers: 2596,
+},
+{
+  date: "2028-05-08",
+  ship: "Scenic Eclipse 2",
+  arrival: "08:00",
+  departure: "17:30",
+  passengers: 228,
+},
+{
+  date: "2028-05-28",
+  ship: "Carnival Splendor",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 3016,
+},
+{
+  date: "2028-06-07",
+  ship: "Carnival Encounter",
+  arrival: "09:00",
+  departure: "17:30",
+  passengers: 2596,
+},
+{
+  date: "2028-06-14",
+  ship: "Carnival Luminosa",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 2260,
+},
+{
+  date: "2028-06-29",
+  ship: "Carnival Splendor",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 3016,
+},
+{
+  date: "2028-07-05",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "16:30",
+  passengers: 2596,
+},
+{
+  date: "2028-08-05",
+  ship: "Carnival Splendor",
+  arrival: "09:00",
+  departure: "19:00",
+  passengers: 3016,
+},
+{
+  date: "2028-08-22",
+  ship: "Carnival Encounter",
+  arrival: "09:00",
+  departure: "18:00",
+  passengers: 2596,
+},
+{
+  date: "2028-08-28",
+  ship: "Seven Seas Navigator",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 490,
+},
+{
+  date: "2028-09-11",
+  ship: "Carnival Splendor",
+  arrival: "07:00",
+  departure: "16:00",
+  passengers: 3016,
+},
+{
+  date: "2028-09-13",
+  ship: "Grand Princess",
+  arrival: "07:00",
+  departure: "17:00",
+  passengers: 2602,
+},
+{
+  date: "2028-09-13",
+  ship: "Le Jacques Cartier",
+  arrival: "07:00",
+  departure: "18:30",
+  passengers: 184,
+},
+{
+  date: "2028-09-26",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "16:00",
+  passengers: 2596,
+},
+{
+  date: "2028-10-25",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "16:00",
+  passengers: 2596,
+},
+{
+  date: "2028-10-29",
+  ship: "Scenic Eclipse 2",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 228,
+},
+{
+  date: "2028-11-18",
+  ship: "Oosterdam",
+  arrival: "08:00",
+  departure: "21:00",
+},
+{
+  date: "2028-11-22",
+  ship: "Carnival Encounter",
+  arrival: "11:00",
+  departure: "10:00",
+  passengers: 2596,
+},
+{
+  date: "2028-11-29",
+  ship: "Viking Orion",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 928,
+},
+{
+  date: "2028-12-02",
+  ship: "Viking Venus",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 930,
+},
+{
+  date: "2028-12-03",
+  ship: "Westerdam",
+  arrival: "08:00",
+  departure: "18:00",
+  passengers: 1968,
+},
+{
+  date: "2028-12-04",
+  ship: "Crystal Symphony",
+  arrival: "07:00",
+  departure: "18:00",
+  passengers: 606,
+},
+{
+  date: "2028-12-10",
+  ship: "Emerald Princess",
+  arrival: "08:00",
+  departure: "18:00",
+},
+{
+  date: "2028-12-11",
+  ship: "Carnival Luminosa",
+  arrival: "09:30",
+  departure: "18:00",
+  passengers: 2260,
+},
+{
+  date: "2028-12-13",
+  ship: "Carnival Encounter",
+  arrival: "07:00",
+  departure: "16:00",
+  passengers: 2596,
+},
+{
+  date: "2028-12-17",
+  ship: "Seven Seas Explorer",
+  arrival: "07:00",
+  departure: "19:00",
+  passengers: 754,
+},
 
 // ===== 2029 =====
+
+
 
 ];
