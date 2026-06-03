@@ -163,8 +163,8 @@ export default function CruiseSchedulePage() {
               {currentCruise.ship}
             </h2>
 
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <div className="rounded-xl bg-black/20 px-4 py-3">
+            {currentCruise.passengers && (
+              <div className="mt-5 rounded-xl bg-black/20 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.12em] text-zinc-500">
                   Passengers
                 </p>
@@ -172,23 +172,7 @@ export default function CruiseSchedulePage() {
                   {currentCruise.passengers}
                 </p>
               </div>
-
-              <div className="rounded-xl bg-black/20 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.12em] text-zinc-500">
-                  Crew
-                </p>
-                <p className="mt-1 text-2xl font-black text-white">
-                  {currentCruise.crew}
-                </p>
-              </div>
-            </div>
-
-            <p className="mt-4 text-sm text-zinc-400">
-              Agent:{" "}
-              <span className="font-semibold text-zinc-200">
-                {currentCruise.agent}
-              </span>
-            </p>
+            )}
           </section>
         ) : (
           <section className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-[#3b352b] to-[#2c2925] p-4 shadow-lg">
@@ -226,10 +210,12 @@ export default function CruiseSchedulePage() {
                     {cruise.arrival} → {cruise.departure}
                   </p>
 
+                  {cruise.passengers && (
                   <div className="flex items-center justify-end gap-2 text-right font-semibold text-amber-400">
                     {getArrivalDot(cruise.passengers)}
                     <span>{cruise.passengers} pax</span>
                   </div>
+                )}
                 </div>
               </div>
             ))}
@@ -283,10 +269,12 @@ export default function CruiseSchedulePage() {
                         {cruise.ship}
                       </p>
 
-                      <div className="mt-0.5 flex items-center justify-end gap-2 text-sm font-semibold text-amber-300">
-                        {getArrivalDot(cruise.passengers)}
-                        <span>{cruise.passengers} pax</span>
-                      </div>
+                      {cruise.passengers && (
+                    <div className="mt-0.5 flex items-center justify-end gap-2 text-sm font-semibold text-amber-300">
+                      {getArrivalDot(cruise.passengers)}
+                      <span>{cruise.passengers} pax</span>
+                    </div>
+                  )}
                     </div>
                   </div>
 
