@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { cruiseSchedule } from "../data/cruiseSchedule";
+import { cruiseSchedule } from "./cruiseSchedule";
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("en-AU", {
