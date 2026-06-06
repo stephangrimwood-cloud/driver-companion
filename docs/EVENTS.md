@@ -176,3 +176,16 @@ Potential future enhancements:
 * Additional event categories if required
 
 Current focus remains on maintaining a curated, high-quality dataset rather than increasing event volume.
+
+//========= Calculator change
+
+Future Investigation
+
+Add Cash Taken field.
+
+Use real-world settlement data from multiple shifts to verify
+settlement formula before changing final calculation.
+
+Goal:
+More Cash = Pay Operator
+More EFTPOS = Pay Driver
