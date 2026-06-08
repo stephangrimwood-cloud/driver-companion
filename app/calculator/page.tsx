@@ -19,6 +19,7 @@ export default function Home() {
   const [dockets, setDockets] = useState("0.00");
   const [fuel, setFuel] = useState("0.00");
   const [eftpos, setEftpos] = useState("0.00");
+  const [cashTaken, setCashTaken] = useState("0.00");
   const [saveMessage, setSaveMessage] = useState("");
   const [reports, setReports] = useState<any[]>([]);
 
@@ -185,7 +186,25 @@ export default function Home() {
                     </div>
                 </div>
 
-                <MoneyInput label="Meter Total" value={meterTotal} setValue={setMeterTotal} />
+                <div className="grid grid-cols-2 gap-3">
+                  <MoneyInput
+                    label="Cash Taken"
+                    value={cashTaken}
+                    setValue={setCashTaken}
+                  />
+
+                  <MoneyInput
+                    label="EFTPOS Printout Total"
+                    value={eftpos}
+                    setValue={setEftpos}
+                  />
+                </div>
+
+                <MoneyInput
+                  label="Meter Total"
+                  value={meterTotal}
+                  setValue={setMeterTotal}
+                />
                 <MoneyInput label="Less Tolls" value={tolls} setValue={setTolls} />
                 <MoneyInput label="Plus Quotes" value={quotes} setValue={setQuotes} />
                 <MoneyInput
@@ -195,7 +214,11 @@ export default function Home() {
                             />
                 <MoneyInput label="Less Owner Dockets" value={dockets} setValue={setDockets} />
                 <MoneyInput label="Less Fuel Cash (if any)" value={fuel} setValue={setFuel} />
-                <MoneyInput label="Less EFTPOS (Enter printout total)" value={eftpos} setValue={setEftpos} />
+                <MoneyInput
+                  label="Less EFTPOS"
+                  value={eftpos}
+                  setValue={() => {}}
+                />
                 </section>
 
                 <section className="space-y-3 rounded-2xl bg-[#3a3a3b] p-4">
