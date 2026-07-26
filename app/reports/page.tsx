@@ -10,6 +10,7 @@ type Report = {
   shiftDate?: string;
   shiftStart?: string;
   shiftEnd?: string;
+  cashTaken?: string;
   meterTotal: string;
   tolls: string;
   quotes: string;
@@ -354,10 +355,15 @@ export default function ReportsPage() {
                             )}
 
                           <ReceiptRow
+                            label="Cash Taken"
+                            value={money(parseFloat(report.cashTaken || "0") || 0)}
+                          />
+
+                          <ReceiptRow
                             label="Meter Total"
                             value={money(parseFloat(report.meterTotal) || 0)}
                             underline
-                            />
+                          />
                           <ReceiptRow label="Less Tolls" value={signedMoney(-(parseFloat(report.tolls) || 0))} />
                           <ReceiptRow label="Plus Quotes" value={`+$${(parseFloat(report.quotes) || 0).toFixed(2)}`} />
                           <ReceiptRow label="Less Evasions / Errors" value={signedMoney(-(parseFloat(report.emes) || 0))} underline />
@@ -366,7 +372,7 @@ export default function ReportsPage() {
                             label="Shift Total"
                             value={money(report.shiftTotal)}
                             underline
-                            />
+                          />
 
                           <ReceiptRow label="Owner 50%" value={money(report.ownerHalf)} />
 
@@ -374,13 +380,13 @@ export default function ReportsPage() {
                             label="Plus Shift Levy"
                             value={signedMoney(parseFloat(report.levy) || 0)}
                             underline
-                            />
+                          />
 
                             <ReceiptRow
                             label="Owner Amount"
                             value={money(ownerShare)}
                             underline
-                            />
+                          />
 
                           <ReceiptRow label="Less Owner Dockets" value={signedMoney(-(parseFloat(report.dockets) || 0))} />
                           <ReceiptRow label="Less Fuel Cash" value={signedMoney(-(parseFloat(report.fuel) || 0))} />

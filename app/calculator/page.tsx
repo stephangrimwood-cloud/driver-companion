@@ -65,6 +65,7 @@ export default function Home() {
     shiftDate,
     shiftStart,
     shiftEnd,
+    cashTaken,
     meterTotal,
     tolls,
     quotes,
