@@ -306,21 +306,51 @@ function MoneyInput({
   setValue: (value: string) => void;
   disabled?: boolean;
 }) {
+  function handleChange(inputValue: string) {
+    // Allow digits and one intentional decimal point.
+    const cleanedValue = inputValue.replace(/[^0-9.]/g, "");
+
+    // Prevent more than one decimal point.
+    const parts = cleanedValue.split(".");
+
+    if (parts.length > 2) {
+      return;
+    }
+
+    // Allow no more than two digits after the decimal.
+    if (parts[1]?.length > 2) {
+      return;
+    }
+
+    setValue(cleanedValue);
+  }
+
+  function formatMoney() {
+    const numberValue = parseFloat(value);
+
+    if (Number.isNaN(numberValue)) {
+      setValue("0.00");
+      return;
+    }
+
+    setValue(numberValue.toFixed(2));
+  }
+
   return (
     <label className="block">
       <span className="text-sm text-zinc-300">{label}</span>
+
       <input
-        type="number"
-        step="0.01"
+        type="text"
+        inputMode="decimal"
         value={value}
         disabled={disabled}
         onFocus={(e) => e.target.select()}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={(e) => {
-          const numberValue = parseFloat(e.target.value);
-
-          if (!Number.isNaN(numberValue)) {
-            setValue(numberValue.toFixed(2));
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={formatMoney}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.currentTarget.blur();
           }
         }}
         className="mt-1 w-full rounded-xl border border-[#7b7b7c] bg-[#2f2f30] px-4 py-3 text-lg outline-none focus:border-[#b8b8ba] disabled:opacity-60"
