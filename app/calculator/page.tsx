@@ -216,9 +216,10 @@ export default function Home() {
                 <MoneyInput label="Less Owner Dockets" value={dockets} setValue={setDockets} />
                 <MoneyInput label="Less Fuel Cash (if any)" value={fuel} setValue={setFuel} />
                 <MoneyInput
-                  label="Less EFTPOS"
+                  label="Less EFTPOS (Auto)"
                   value={eftpos}
                   setValue={() => {}}
+                  disabled
                 />
                 </section>
 
