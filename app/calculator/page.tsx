@@ -373,16 +373,9 @@ function MoneyInput({
   setValue: (value: string) => void;
   disabled?: boolean;
 }) {
-  function handleChange(inputValue: string) {
-    const cleanedValue = inputValue.replace(/[^0-9.]/g, "");
-    const parts = cleanedValue.split(".");
-
-    if (parts.length > 2 || (parts[1]?.length ?? 0) > 2) {
-      return;
-    }
-
-    setValue(cleanedValue);
-  }
+  const [entryMode, setEntryMode] = useState<"cents" | "decimal" | null>(
+    null
+  );
 
   function formatMoney() {
     const numberValue = parseFloat(value);
@@ -392,6 +385,30 @@ function MoneyInput({
         ? "0.00"
         : numberValue.toFixed(2)
     );
+
+    setEntryMode(null);
+  }
+
+  function handlePaste(inputValue: string) {
+    const cleanedValue = inputValue.replace(/[^0-9.]/g, "");
+
+    if (!cleanedValue) {
+      setValue("0.00");
+      return;
+    }
+
+    if (cleanedValue.includes(".")) {
+      const numberValue = parseFloat(cleanedValue);
+      setValue(
+        Number.isNaN(numberValue)
+          ? "0.00"
+          : numberValue.toFixed(2)
+      );
+      return;
+    }
+
+    const cents = parseInt(cleanedValue, 10);
+    setValue((cents / 100).toFixed(2));
   }
 
   return (
@@ -403,10 +420,78 @@ function MoneyInput({
         inputMode="decimal"
         value={value}
         disabled={disabled}
-        onFocus={(event) => event.target.select()}
-        onChange={(event) => handleChange(event.target.value)}
+        onFocus={(event) => {
+          setEntryMode(null);
+          event.currentTarget.select();
+        }}
+        onChange={(event) => handlePaste(event.target.value)}
         onBlur={formatMoney}
         onKeyDown={(event) => {
+          if (disabled) {
+            return;
+          }
+
+          if (/^[0-9]$/.test(event.key)) {
+            event.preventDefault();
+
+            const digit = Number(event.key);
+
+            if (entryMode === "decimal") {
+              const [wholePart = "0", decimalPart = ""] =
+                value.split(".");
+
+              if (decimalPart.length < 2) {
+                setValue(
+                  `${wholePart}.${decimalPart}${event.key}`
+                );
+              }
+
+              return;
+            }
+
+            const currentCents =
+              entryMode === "cents"
+                ? Math.round((parseFloat(value) || 0) * 100)
+                : 0;
+
+            const updatedCents = currentCents * 10 + digit;
+
+            setEntryMode("cents");
+            setValue((updatedCents / 100).toFixed(2));
+            return;
+          }
+
+          if (event.key === ".") {
+            event.preventDefault();
+            setEntryMode("decimal");
+            setValue("0.");
+            return;
+          }
+
+          if (event.key === "Backspace") {
+            event.preventDefault();
+
+            if (entryMode === "decimal") {
+              const shortenedValue = value.slice(0, -1);
+              setValue(
+                shortenedValue === "" || shortenedValue === "0"
+                  ? "0."
+                  : shortenedValue
+              );
+              return;
+            }
+
+            const currentCents = Math.round(
+              (parseFloat(value) || 0) * 100
+            );
+
+            setEntryMode("cents");
+            setValue(
+              (Math.floor(currentCents / 10) / 100).toFixed(2)
+            );
+            return;
+          }
+
           if (event.key === "Enter") {
             event.currentTarget.blur();
           }
