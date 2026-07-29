@@ -465,6 +465,16 @@ export default function ReportsPage() {
                             />
                           </div>
 
+                          <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                              Reconciliation
+                            </p>
+
+                            <p className="mt-1 text-xs italic text-zinc-500">
+                              Cash Taken + Settlement − Area Charge = Driver Share
+                            </p>
+                          </div>
+
                           <div className="mt-4 grid grid-cols-2 gap-2">
                             <button
                               type="button"
