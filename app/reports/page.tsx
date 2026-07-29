@@ -486,7 +486,14 @@ export default function ReportsPage() {
                             </p>
                           </div>
 
-                          <div className="mt-4 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            className="mt-4 w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+                          >
+                            Export to Google Sheets
+                          </button>
+
+                          <div className="mt-2 grid grid-cols-2 gap-2">
                             <button
                               type="button"
                               onClick={() => {
