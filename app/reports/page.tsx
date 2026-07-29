@@ -348,16 +348,6 @@ export default function ReportsPage() {
                       const driverShare = getDriverShare(report);
                       const ownerShare = getOwnerShare(report);
 
-                      const settlementAmount = Math.abs(report.payable);
-
-                      const reconciliationAmount =
-                        parseAmount(report.cashTaken) +
-                        settlementAmount -
-                        parseAmount(report.areaCharge ?? report.tolls);
-
-                      const reconciles =
-                        Math.abs(reconciliationAmount - driverShare) < 0.01;
-
                       return (
                         <div
                           key={report.id}
@@ -475,19 +465,6 @@ export default function ReportsPage() {
                               label="Owner Share"
                               value={money(ownerShare)}
                             />
-                          </div>
-
-                          <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                              Settlement Reconciliation
-                            </p>
-
-                            <p className="mt-1 text-xs italic text-zinc-400">
-                              {money(parseAmount(report.cashTaken))} +{" "}
-                              {money(settlementAmount)} −{" "}
-                              {money(parseAmount(report.areaCharge ?? report.tolls))} ={" "}
-                              {money(driverShare)} {reconciles ? "✓" : "⚠️"}
-                            </p>
                           </div>
 
                           <div className="mt-4 grid grid-cols-2 gap-2">
