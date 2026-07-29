@@ -488,6 +488,8 @@ export default function ReportsPage() {
                             />
                           </div>
 
+                          <div className="my-4 border-t border-[#4a4a4b]" />
+
                           <p className="mt-2 text-center text-xs italic text-zinc-400">
                             <span className="font-medium text-zinc-300">Cash Taken</span>
                             <span className="px-1 text-zinc-500">+</span>
