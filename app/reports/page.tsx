@@ -233,6 +233,8 @@ export default function ReportsPage() {
     updateReports(updatedReports);
   }
 
+
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
       <div className="mx-auto max-w-md space-y-5">
@@ -345,6 +347,14 @@ export default function ReportsPage() {
                       const reportDate = parseLocalDate(reportDateKey);
                       const driverShare = getDriverShare(report);
                       const ownerShare = getOwnerShare(report);
+
+                      const reconciliationAmount =
+                        parseAmount(report.cashTaken) +
+                        Math.abs(report.payable) -
+                        parseAmount(report.areaCharge ?? report.tolls);
+
+                      const reconciles =
+                        Math.abs(reconciliationAmount - driverShare) < 0.01;
 
                       return (
                         <div
@@ -467,11 +477,15 @@ export default function ReportsPage() {
 
                           <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 p-3">
                             <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                              Reconciliation
+                              Settlement Reconciliation
                             </p>
 
-                            <p className="mt-1 text-xs italic text-zinc-500">
-                              Cash Taken + Settlement − Area Charge = Driver Share
+                            <p className="mt-1 text-xs italic text-zinc-400">
+                              {money(parseAmount(report.cashTaken))} +{" "}
+                              {money(Math.abs(report.payable))} −{" "}
+                              {money(parseAmount(report.areaCharge ?? report.tolls))} ={" "}
+                              {money(driverShare)}{" "}
+                              {reconciles ? "✓" : "⚠️"}
                             </p>
                           </div>
 
