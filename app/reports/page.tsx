@@ -23,7 +23,8 @@ type Report = {
   shiftEnd?: string;
   cashTaken?: string;
   meterTotal: string;
-  tolls: string;
+  areaCharge: string;
+  tolls?: string;
   quotes: string;
   emes: string;
   shiftTotal: number;
@@ -383,8 +384,10 @@ export default function ReportsPage() {
                             underline
                           />
                           <ReceiptRow
-                            label="Less Tolls"
-                            value={signedMoney(-parseAmount(report.tolls))}
+                            label="Less Area Charge"
+                            value={signedMoney(
+                              -parseAmount(report.areaCharge ?? report.tolls)
+                            )}
                           />
                           <ReceiptRow
                             label="Plus Quotes"

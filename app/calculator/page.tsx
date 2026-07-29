@@ -11,7 +11,7 @@ type ShiftReport = {
   shiftEnd: string;
   cashTaken: string;
   meterTotal: string;
-  tolls: string;
+  areaCharge: string;
   quotes: string;
   emes: string;
   shiftTotal: number;
@@ -66,7 +66,7 @@ export default function Home() {
   const [cashTaken, setCashTaken] = useState("0.00");
   const [eftpos, setEftpos] = useState("0.00");
   const [meterTotal, setMeterTotal] = useState("0.00");
-  const [tolls, setTolls] = useState("0.00");
+  const [areaCharge, setAreaCharge] = useState("0.00");
   const [quotes, setQuotes] = useState("0.00");
   const [emes, setEmes] = useState("0.00");
   const [dockets, setDockets] = useState("0.00");
@@ -76,7 +76,7 @@ export default function Home() {
 
   const shiftTotal =
     toNumber(meterTotal) -
-    toNumber(tolls) +
+    toNumber(areaCharge) +
     toNumber(quotes) -
     toNumber(emes);
 
@@ -111,7 +111,7 @@ export default function Home() {
       shiftEnd,
       cashTaken,
       meterTotal,
-      tolls,
+      areaCharge,
       quotes,
       emes,
       shiftTotal,
@@ -143,7 +143,7 @@ export default function Home() {
     setCashTaken("0.00");
     setEftpos("0.00");
     setMeterTotal("0.00");
-    setTolls("0.00");
+    setAreaCharge("0.00");
     setQuotes("0.00");
     setEmes("0.00");
     setDockets("0.00");
@@ -223,9 +223,9 @@ export default function Home() {
           />
 
           <MoneyInput
-            label="Less Tolls"
-            value={tolls}
-            setValue={setTolls}
+            label="Less Area Charge"
+            value={areaCharge}
+            setValue={setAreaCharge}
           />
 
           <MoneyInput
