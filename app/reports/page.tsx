@@ -373,7 +373,7 @@ export default function ReportsPage() {
                             </div>
                           )}
 
-                          <div className="flex justify-between items-center">
+                          <div className="mt-2 flex items-center justify-between">
                             <span className="text-zinc-300">Cash Taken</span>
 
                             <div className="flex items-center gap-2">
@@ -387,16 +387,12 @@ export default function ReportsPage() {
                             </div>
                           </div>
 
+                          <div className="my-3 border-t border-[#4a4a4b]" />
+
                           <ReceiptRow
                             label="Meter Total"
                             value={money(parseAmount(report.meterTotal))}
                             underline
-                          />
-                          <ReceiptRow
-                            label="Less Area Charge"
-                            value={signedMoney(
-                              -parseAmount(report.areaCharge ?? report.tolls)
-                            )}
                           />
                           <ReceiptRow
                             label="Plus Quotes"
