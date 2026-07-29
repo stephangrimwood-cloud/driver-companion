@@ -10,6 +10,7 @@ type ShiftReport = {
   shiftStart: string;
   shiftEnd: string;
   cashTaken: string;
+  accountBookings: string;
   meterTotal: string;
   areaCharge: string;
   quotes: string;
@@ -111,6 +112,7 @@ export default function Home() {
       shiftStart,
       shiftEnd,
       cashTaken,
+      accountBookings,
       meterTotal,
       areaCharge,
       quotes,
