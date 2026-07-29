@@ -467,7 +467,7 @@ export default function ReportsPage() {
                             />
                           </div>
 
-                          <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 p-3">
+                          <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 px-3 py-2">
                             <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
                               Reconciliation
                             </p>
