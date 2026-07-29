@@ -397,6 +397,12 @@ export default function ReportsPage() {
                             underline
                           />
                           <ReceiptRow
+                            label="Less Area Charge"
+                            value={signedMoney(
+                              -parseAmount(report.areaCharge ?? report.tolls)
+                            )}
+                          />
+                          <ReceiptRow
                             label="Plus Quotes"
                             value={signedMoney(parseAmount(report.quotes))}
                           />
