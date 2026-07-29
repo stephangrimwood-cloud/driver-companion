@@ -490,25 +490,24 @@ export default function ReportsPage() {
 
                           <div className="my-4 border-t border-[#4a4a4b]" />
 
-                          <p className="mt-2 text-center text-xs italic text-zinc-400">
-                            <span className="font-medium text-zinc-300">Cash Taken</span>
-                            <span className="px-1 text-zinc-500">+</span>
+                          <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 px-3 py-2">
+                            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                              Reconciliation Check
+                            </p>
 
-                            <span className="font-medium text-zinc-300">
-                              Account Bookings (if any)
-                            </span>
-                            <span className="px-1 text-zinc-500">+</span>
+                            <div className="space-y-1 text-center text-xs italic text-zinc-400">
+                              <div>Cash Taken</div>
+                              <div>+ Account Bookings (if any)</div>
+                              <div>+ Settlement Paid to Driver</div>
+                              <div>− Area Charge</div>
 
-                            <span className="font-medium text-zinc-300">
-                              Settlement Paid to Driver
-                            </span>
-                            <span className="px-1 text-zinc-500">−</span>
+                              <div className="my-2 border-t border-zinc-700" />
 
-                            <span className="font-medium text-zinc-300">Area Charge</span>
-                            <span className="px-1 text-zinc-500">=</span>
-
-                            <span className="font-medium text-zinc-300">Driver Share</span>
-                          </p>
+                              <div className="font-medium text-zinc-300">
+                                = Driver Share
+                              </div>
+                            </div>
+                          </div>
 
                           <button
                             type="button"
