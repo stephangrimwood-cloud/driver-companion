@@ -468,11 +468,11 @@ export default function ReportsPage() {
                           </div>
 
                           <div className="mt-5 rounded-xl border border-zinc-700 bg-zinc-900/30 p-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
                               Reconciliation
                             </p>
 
-                            <p className="mt-2 text-xs italic text-zinc-400">
+                            <p className="mt-2 text-center text-xs italic text-zinc-400">
                               <span className="font-medium text-zinc-300">Cash Taken</span>
                               <span className="px-1 text-zinc-500">+</span>
 
