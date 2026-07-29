@@ -373,10 +373,19 @@ export default function ReportsPage() {
                             </div>
                           )}
 
-                          <ReceiptRow
-                            label="Cash Taken"
-                            value={money(parseAmount(report.cashTaken))}
-                          />
+                          <div className="flex justify-between items-center">
+                            <span className="text-zinc-300">Cash Taken</span>
+
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] italic text-zinc-500">
+                                Reference only
+                              </span>
+
+                              <span className="tabular-nums text-zinc-200">
+                                {money(parseAmount(report.cashTaken))}
+                              </span>
+                            </div>
+                          </div>
 
                           <ReceiptRow
                             label="Meter Total"
