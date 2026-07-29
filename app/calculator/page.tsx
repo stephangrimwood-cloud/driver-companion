@@ -64,6 +64,7 @@ export default function Home() {
   const [shiftEnd, setShiftEnd] = useState("");
 
   const [cashTaken, setCashTaken] = useState("0.00");
+  const [accountBookings, setAccountBookings] = useState("0.00");
   const [eftpos, setEftpos] = useState("0.00");
   const [meterTotal, setMeterTotal] = useState("0.00");
   const [areaCharge, setAreaCharge] = useState("0.00");
@@ -207,6 +208,12 @@ export default function Home() {
               label="Cash Taken"
               value={cashTaken}
               setValue={setCashTaken}
+            />
+
+            <MoneyInput
+              label="Account Bookings"
+              value={accountBookings}
+              setValue={setAccountBookings}
             />
 
             <MoneyInput

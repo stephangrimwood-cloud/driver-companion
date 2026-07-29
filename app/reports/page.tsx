@@ -22,6 +22,7 @@ type Report = {
   shiftStart?: string;
   shiftEnd?: string;
   cashTaken?: string;
+  accountBookings?: string;
   meterTotal: string;
   areaCharge: string;
   tolls?: string;
@@ -385,6 +386,20 @@ export default function ReportsPage() {
 
                               <span className="tabular-nums text-zinc-200">
                                 {money(parseAmount(report.cashTaken))}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="mt-2 flex items-center justify-between">
+                            <span className="text-zinc-300">Account Bookings</span>
+
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] italic text-zinc-500">
+                                Reference only
+                              </span>
+
+                              <span className="tabular-nums text-zinc-200">
+                                {money(parseAmount(report.accountBookings))}
                               </span>
                             </div>
                           </div>
