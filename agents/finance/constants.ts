@@ -1,0 +1,5 @@
+export const GMAIL_SEARCH_QUERIES = {
+  REMITTANCES: "",
+  ACCOUNT_BOOKINGS: "",
+  INVOICES: "",
+};
