@@ -13,9 +13,10 @@
 - [x] Create OAuth credentials.
 - [x] Load OAuth credentials.
 - [x] Create Google OAuth client.
-- [ ] Generate Google authorisation URL.
-- [ ] Complete first Google sign-in.
-- [ ] Store authentication token.
+- [x] Generate Google authorisation URL.
+- [x] Complete first Google sign-in.
+- [ ] Exchange authorisation code for tokens.
+- [ ] Store refresh token securely.
 
 ---
 

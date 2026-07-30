@@ -15,3 +15,7 @@ All notable changes to Agent 001 are documented here.
 - Google OAuth client creation.
 - Google authorisation URL generation.
 - Unit tests for authentication.
+- Local OAuth callback server.
+- Automatic authorisation code capture.
+- Browser-based Google authentication flow.
+- OAuth authentication tests.
