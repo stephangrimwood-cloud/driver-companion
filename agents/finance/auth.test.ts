@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  createAuthenticatedGoogleOAuthClient,
   createGoogleOAuthClient,
   generateGoogleAuthorisationUrl,
   loadGoogleCredentials,
+  loadGoogleRefreshToken,
 } from "./auth";
 
 describe("Authentication", () => {
@@ -25,4 +27,19 @@ describe("Authentication", () => {
     expect(url).toContain("accounts.google.com");
     expect(url).toContain("scope=");
   });
+
+    it("loads the saved Google refresh token", () => {
+    const refreshToken = loadGoogleRefreshToken();
+
+    expect(refreshToken).toBeDefined();
+    expect(refreshToken.length).toBeGreaterThan(0);
+  });
+
+  it("creates an authenticated Google OAuth client", () => {
+    const client = createAuthenticatedGoogleOAuthClient();
+
+    expect(client).toBeDefined();
+    expect(client.credentials.refresh_token).toBeDefined();
+  });
+  
 });

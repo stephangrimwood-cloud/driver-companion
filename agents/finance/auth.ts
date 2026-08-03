@@ -59,3 +59,55 @@ export function generateGoogleAuthorisationUrl(): string {
     prompt: "consent",
   });
 }
+
+export async function exchangeAuthorisationCode(code: string) {
+  const client = createGoogleOAuthClient();
+
+  const { tokens } = await client.getToken(code);
+
+  return tokens;
+}
+
+export function saveGoogleRefreshToken(refreshToken: string): void {
+  const refreshTokenPath = path.join(
+    process.cwd(),
+    "secrets",
+    "gmail-refresh-token.json",
+  );
+
+  fs.writeFileSync(
+    refreshTokenPath,
+    JSON.stringify({ refresh_token: refreshToken }, null, 2),
+    "utf8",
+  );
+} // <-- This brace was missing
+
+export function loadGoogleRefreshToken(): string {
+  const refreshTokenPath = path.join(
+    process.cwd(),
+    "secrets",
+    "gmail-refresh-token.json",
+  );
+
+  const refreshTokenFile = fs.readFileSync(refreshTokenPath, "utf8");
+
+  const { refresh_token } = JSON.parse(refreshTokenFile) as {
+    refresh_token: string;
+  };
+
+  if (!refresh_token) {
+    throw new Error("Refresh token was not found.");
+  }
+
+  return refresh_token;
+}
+
+export function createAuthenticatedGoogleOAuthClient() {
+  const client = createGoogleOAuthClient();
+
+  client.setCredentials({
+    refresh_token: loadGoogleRefreshToken(),
+  });
+
+  return client;
+}

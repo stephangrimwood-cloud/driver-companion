@@ -1,4 +1,9 @@
-import { generateGoogleAuthorisationUrl } from "./auth";
+import {
+  exchangeAuthorisationCode,
+  generateGoogleAuthorisationUrl,
+  saveGoogleRefreshToken,
+} from "./auth";
+
 import { waitForAuthorisationCode } from "./callback";
 
 async function main() {
@@ -8,9 +13,18 @@ async function main() {
   console.log(authorisationUrl);
   console.log("\nWaiting for Google to return the authorisation code...\n");
 
-  await waitForAuthorisationCode();
+  const code = await waitForAuthorisationCode();
 
-  console.log("\nAuthorisation code received successfully.\n");
+  const tokens = await exchangeAuthorisationCode(code);
+
+  if (!tokens.refresh_token) {
+  throw new Error("Google did not return a refresh token.");
+}
+
+saveGoogleRefreshToken(tokens.refresh_token);
+
+  console.log("\nRefresh token saved successfully.\n");
+
 }
 
 main().catch((error) => {
