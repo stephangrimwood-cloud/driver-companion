@@ -1,8 +1,46 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
-  return NextResponse.json({
-    success: true,
-    message: "Google Sheets export endpoint is working.",
-  });
+import { mapReportToSheetRow } from "../../../../../agents/finance/mapper";
+import { SheetsAgent } from "../../../../../agents/finance/sheets";
+import {
+  getWorksheetName,
+  getWorksheetRow,
+} from "../../../../../agents/finance/worksheet";
+
+export async function POST(request: NextRequest) {
+  try {
+    const report = await request.json();
+
+    const row = mapReportToSheetRow(report);
+    const sheetName = getWorksheetName(report.shiftDate);
+    const rowNumber = getWorksheetRow(report.shiftDate);
+
+    const sheets = new SheetsAgent();
+
+    await sheets.writeReportRow(
+      sheetName,
+      rowNumber,
+      row,
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Report exported to ${sheetName}, row ${rowNumber}.`,
+    });
+  } catch (error) {
+    console.error("Unable to export Driver Companion report:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to export report.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }

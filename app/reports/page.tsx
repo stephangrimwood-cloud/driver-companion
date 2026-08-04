@@ -38,6 +38,8 @@ type Report = {
   payable: number;
   driverShare?: number;
   ownerShare?: number;
+  exportedToGoogleSheets?: boolean;
+  exportedAt?: string;
   note?: string;
 };
 
@@ -163,6 +165,14 @@ export default function ReportsPage() {
   const [noteReportId, setNoteReportId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
 
+  const [exportingReportId, setExportingReportId] = useState<string | null>(
+    null,
+  );
+
+  const [exportResults, setExportResults] = useState<
+    Record<string, "success" | "error">
+  >({});
+
   const weekStart = getMonday(new Date());
   weekStart.setDate(weekStart.getDate() + weekOffset * 7);
 
@@ -234,14 +244,51 @@ export default function ReportsPage() {
     updateReports(updatedReports);
   }
 
-  async function exportToGoogleSheets() {
-    const response = await fetch("/api/finance/export/google-sheets", {
-      method: "POST",
-    });
+  async function exportToGoogleSheets(report: Report) {
+    setExportingReportId(report.id);
 
-    const result = await response.json();
+    try {
+      const response = await fetch("/api/finance/export/google-sheets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(report),
+      });
 
-    console.log(result);
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message ?? "Export failed.");
+      }
+
+      setExportResults((current) => ({
+        ...current,
+        [report.id]: "success",
+      }));
+
+      const updatedReports = reports.map((existingReport) =>
+        existingReport.id === report.id
+          ? {
+              ...existingReport,
+              exportedToGoogleSheets: true,
+              exportedAt: new Date().toISOString(),
+            }
+          : existingReport,
+      );
+
+      updateReports(updatedReports);
+
+    } catch (error) {
+      console.error("Unable to export report:", error);
+
+      setExportResults((current) => ({
+        ...current,
+        [report.id]: "error",
+      }));
+    } finally {
+      setExportingReportId(null);
+    }
   }
 
   return (
@@ -520,10 +567,17 @@ export default function ReportsPage() {
 
                           <button
                             type="button"
-                            onClick={exportToGoogleSheets}
-                            className="mt-4 w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
+                            onClick={() => exportToGoogleSheets(report)}
+                            disabled={exportingReportId === report.id}
+                            className="mt-4 w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            Export to Google Sheets
+                            {exportingReportId === report.id
+                              ? "Exporting..."
+                              : report.exportedToGoogleSheets
+                                ? "☁ Synced"
+                                : exportResults[report.id] === "error"
+                                  ? "Export failed — try again"
+                                  : "Export to Google Sheets"}
                           </button>
 
                           <div className="mt-2 grid grid-cols-2 gap-2">

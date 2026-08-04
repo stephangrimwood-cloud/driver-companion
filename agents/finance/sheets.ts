@@ -31,4 +31,23 @@ export class SheetsAgent {
 
     console.log("✓ Test value written to Google Sheets.");
   }
+
+  async writeReportRow(
+    sheetName: string,
+    rowNumber: number,
+    row: (string | number)[],
+  ): Promise<void> {
+    await this.client.spreadsheets.values.update({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: `'${sheetName}'!A${rowNumber}:G${rowNumber}`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [row],
+      },
+    });
+
+        console.log(
+      `✓ Report exported to '${sheetName}' row ${rowNumber}.`,
+    );
+  }
 }
