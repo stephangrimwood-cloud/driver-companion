@@ -25,6 +25,10 @@ type ShiftReport = {
   payable: number;
   driverShare: number;
   ownerShare: number;
+  
+  backedUpToGoogleSheets?: boolean;
+  backedUpAt?: string;
+  backupError?: string;
 };
 
 const REPORTS_STORAGE_KEY = "driver-companion-reports";
@@ -127,6 +131,7 @@ export default function Home() {
       payable,
       driverShare,
       ownerShare,
+      backedUpToGoogleSheets: false,
     };
 
     const existingReports = loadReports();
@@ -137,29 +142,64 @@ export default function Home() {
       JSON.stringify(updatedReports)
     );
 
-    try {
-      const response = await fetch("/api/finance/backup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(report),
-      });
+   try {
+    const response = await fetch("/api/finance/backup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(report),
+    });
 
-      if (!response.ok) {
-        throw new Error("Backup request failed.");
-      }
-
-      console.log("✓ Report backup request completed.");
-    } catch (error) {
-      console.error("Unable to back up report:", error);
+    if (!response.ok) {
+      throw new Error("Backup request failed.");
     }
 
-    setSaveMessage("Report saved");
+    const backedUpAt = new Date().toISOString();
 
-    window.setTimeout(() => {
-      setSaveMessage("");
-    }, 3000);
+    const backedUpReports = updatedReports.map((existingReport) =>
+      existingReport.id === report.id
+        ? {
+            ...existingReport,
+            backedUpToGoogleSheets: true,
+            backedUpAt,
+            backupError: undefined,
+          }
+        : existingReport,
+    );
+
+    localStorage.setItem(
+      REPORTS_STORAGE_KEY,
+      JSON.stringify(backedUpReports),
+    );
+
+    setSaveMessage("Report saved and backed up");
+  } catch (error) {
+    console.error("Unable to back up report:", error);
+
+    const backupError =
+      error instanceof Error
+        ? error.message
+        : "Cloud backup failed.";
+
+    const locallySavedReports = updatedReports.map((existingReport) =>
+      existingReport.id === report.id
+        ? {
+            ...existingReport,
+            backedUpToGoogleSheets: false,
+            backedUpAt: undefined,
+            backupError,
+          }
+        : existingReport,
+    );
+
+    localStorage.setItem(
+      REPORTS_STORAGE_KEY,
+      JSON.stringify(locallySavedReports),
+    );
+
+    setSaveMessage("Report saved locally — backup failed");
+  }
 
     setCashTaken("0.00");
     setEftpos("0.00");

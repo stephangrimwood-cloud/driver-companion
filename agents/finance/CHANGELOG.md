@@ -8,47 +8,124 @@ All notable changes to Agent 001 are documented here.
 
 ## Added
 
+### Google Sheets Integration
+
 - Google Sheets authentication.
 - Google Sheets configuration loader.
-- Google Sheets client.
-- SheetsAgent.
+- Authenticated Google Sheets client.
+- `SheetsAgent`.
 - Workbook title verification.
-- Google Sheets write support.
+- Row-based worksheet writing.
 - Driver Companion export API endpoint.
 - Driver Companion report mapper.
 - Worksheet resolver.
-- Report row writer.
-- Export workflow from Driver Companion to Taxi Business Records.
+- Monthly worksheet row writer.
+- Automatic worksheet selection.
 - Initial worksheet status support (`Pending`).
+
+### Driver Companion Backup
+
+- Dedicated Driver Companion backup API endpoint.
+- Hidden **Driver Companion Backup** worksheet.
+- Automatic report backup when **Save Report** is pressed.
+- Report ID tracking.
+- Backup timestamp storage.
+- Application version storage.
+- Complete Driver Companion JSON backup.
+- Update existing backups using Report ID.
+- Independent cloud backup workflow.
+
+### Testing
+
+- Worksheet resolver unit tests.
+- Report mapper unit tests.
+- Authentication unit tests.
+- Verified Google Sheets export workflow.
+- Verified automatic backup workflow.
+
+---
 
 ## Changed
 
-- Replaced test cell writing with row-based worksheet updates.
-- Export workflow now targets the correct worksheet automatically.
-- Reports are written to the correct day rather than appended to the end of the sheet.
-- Workbook totals and summary calculations now update automatically following an export.
+### Export Workflow
+
+- Replaced test-cell writing with row-based worksheet updates.
+- Reports are now written to the correct worksheet automatically.
+- Reports are written to the correct day instead of appending to the end of the worksheet.
+- Workbook totals and Summary calculations now update automatically following export.
+
+### Architecture
+
+- Backup is now performed during **Save Report** rather than during export.
+- Monthly ledger export and report backup are now completely independent workflows.
+- Local browser storage remains the working copy.
+- Google Sheets now provides an independent cloud backup.
+
+---
 
 ## Engineering
 
-- Introduced `mapper.ts` to separate business rules from Google Sheets logic.
-- Introduced `worksheet.ts` to isolate workbook layout knowledge.
+- Introduced `mapper.ts` to isolate business rules.
+- Introduced `worksheet.ts` to isolate workbook layout logic.
+- Introduced dedicated Backup API endpoint.
 - Separated responsibilities between:
+
+  - Driver Companion
+  - Backup API
+  - Export API
   - Mapper
   - Worksheet Resolver
   - SheetsAgent
-  - Export API
+
+- Eliminated duplicate backup logic from the export pipeline.
+- Established clear separation between:
+
+  - Business record export.
+  - Disaster recovery backup.
+
+---
 
 ## Milestone
 
-**Milestone 006 — First End-to-End Export**
+### **Milestone 006 — First End-to-End Export** ✅
 
-Driver Companion can now export completed shift reports directly into the Taxi Business Records workbook.
+Driver Companion successfully exports completed shift reports directly into the Taxi Business Records workbook.
 
-The complete workflow is now operational:
+Workflow:
 
-Driver Companion → Export API → Mapper → Worksheet Resolver → SheetsAgent → Google Sheets
+```
+Driver Companion
+        │
+        ▼
+ Export API
+        │
+        ▼
+     Mapper
+        │
+        ▼
+Worksheet Resolver
+        │
+        ▼
+  SheetsAgent
+        │
+        ▼
+ Google Sheets
+```
 
-This represents the first successful end-to-end integration between Driver Companion, Agent 001 and Taxi Business Records.
+---
+
+### **Milestone 007 — Automatic Report Backup** ✅
+
+Driver Companion now automatically protects every saved report.
+
+Every report is stored in two independent locations:
+
+- Local browser storage.
+- Hidden **Driver Companion Backup** worksheet.
+
+The complete report JSON is preserved, allowing future restoration without relying on browser storage.
+
+Business record exports are now independent of backups, providing a clear separation between accounting and disaster recovery.
 
 ---
 
