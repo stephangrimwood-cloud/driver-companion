@@ -50,4 +50,53 @@ export class SheetsAgent {
       `✓ Report exported to '${sheetName}' row ${rowNumber}.`,
     );
   }
+
+  async writeReportBackup(
+    reportId: string,
+    shiftDate: string,
+    backedUpAt: string,
+    appVersion: string,
+    reportJson: string,
+  ): Promise<void> {
+    const backupSheetName = "Driver Companion Backup";
+
+    const existingRows =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${backupSheetName}'!A:E`,
+      });
+
+    const rows = existingRows.data.values ?? [];
+
+    const existingRowIndex = rows.findIndex(
+      (row) => row[0] === reportId,
+    );
+
+    const targetRow =
+      existingRowIndex >= 0
+        ? existingRowIndex + 1
+        : rows.length + 1;
+
+    await this.client.spreadsheets.values.update({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: `'${backupSheetName}'!A${targetRow}:E${targetRow}`,
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [
+          [
+            reportId,
+            shiftDate,
+            backedUpAt,
+            appVersion,
+            reportJson,
+          ],
+        ],
+      },
+    });
+
+    console.log(
+      `✓ Driver Companion backup saved to row ${targetRow}.`,
+    );
+  }
+
 }

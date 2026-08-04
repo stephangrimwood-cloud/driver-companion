@@ -102,7 +102,7 @@ export default function Home() {
     document.documentElement.style.colorScheme = "dark";
   }, []);
 
-  function saveReport() {
+  async function saveReport() {
     const now = new Date();
 
     const report: ShiftReport = {
@@ -136,6 +136,24 @@ export default function Home() {
       REPORTS_STORAGE_KEY,
       JSON.stringify(updatedReports)
     );
+
+    try {
+      const response = await fetch("/api/finance/backup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(report),
+      });
+
+      if (!response.ok) {
+        throw new Error("Backup request failed.");
+      }
+
+      console.log("✓ Report backup request completed.");
+    } catch (error) {
+      console.error("Unable to back up report:", error);
+    }
 
     setSaveMessage("Report saved");
 
