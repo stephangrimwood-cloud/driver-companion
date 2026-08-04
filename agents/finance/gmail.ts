@@ -1,6 +1,11 @@
 import type { FinanceAgentConfig } from "./types";
-import { createAuthenticatedGoogleOAuthClient } from "./auth";
+import {
+  createAuthenticatedGoogleOAuthClient,
+  createGoogleSheetsClient,
+  loadGoogleSpreadsheetId,
+} from "./auth";
 import { google } from "googleapis";
+import { GMAIL_SEARCH_QUERIES } from "./constants";
 
 export class GmailAgent {
   private client = createAuthenticatedGoogleOAuthClient();
@@ -27,6 +32,7 @@ export class GmailAgent {
     const response = await gmail.users.messages.list({
       userId: "me",
       maxResults: 5,
+      q: GMAIL_SEARCH_QUERIES.REMITTANCES,
     });
 
     const firstMessage = response.data.messages?.[0];

@@ -5,6 +5,9 @@ import {
   generateGoogleAuthorisationUrl,
   loadGoogleCredentials,
   loadGoogleRefreshToken,
+  loadGoogleSpreadsheetId,
+  createGoogleSheetsClient,
+  loadGoogleSheetsConfig,
 } from "./auth";
 
 describe("Authentication", () => {
@@ -40,6 +43,26 @@ describe("Authentication", () => {
 
     expect(client).toBeDefined();
     expect(client.credentials.refresh_token).toBeDefined();
+  });
+
+    it("loads the Google Spreadsheet ID", () => {
+    const spreadsheetId = loadGoogleSpreadsheetId();
+
+    expect(spreadsheetId).toBeDefined();
+    expect(spreadsheetId.length).toBeGreaterThan(0);
+  });
+
+    it("creates a Google Sheets client", () => {
+    const sheets = createGoogleSheetsClient();
+
+    expect(sheets).toBeDefined();
+  });
+
+    it("loads the Google Sheets configuration", () => {
+    const config = loadGoogleSheetsConfig();
+
+    expect(config.spreadsheet_id).toBeDefined();
+    expect(config.template_sheet).toBeDefined();
   });
   
 });

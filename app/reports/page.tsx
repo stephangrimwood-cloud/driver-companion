@@ -234,9 +234,18 @@ export default function ReportsPage() {
     updateReports(updatedReports);
   }
 
+  async function exportToGoogleSheets() {
+    const response = await fetch("/api/finance/export/google-sheets", {
+      method: "POST",
+    });
 
+    const result = await response.json();
+
+    console.log(result);
+  }
 
   return (
+
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
       <div className="mx-auto max-w-md space-y-5">
         <section className="rounded-2xl bg-[#3a3a3b] p-4">
@@ -511,6 +520,7 @@ export default function ReportsPage() {
 
                           <button
                             type="button"
+                            onClick={exportToGoogleSheets}
                             className="mt-4 w-full rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/20"
                           >
                             Export to Google Sheets

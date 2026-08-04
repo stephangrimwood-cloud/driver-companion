@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { google } from "googleapis";
 
+import type { GoogleSheetsConfig } from "./types";
+
 const credentialsPath = path.join(
   process.cwd(),
   "secrets",
@@ -55,7 +57,10 @@ export function generateGoogleAuthorisationUrl(): string {
 
   return client.generateAuthUrl({
     access_type: "offline",
-    scope: ["https://www.googleapis.com/auth/gmail.readonly"],
+    scope: [
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/spreadsheets",
+    ],
     prompt: "consent",
   });
 }
@@ -80,7 +85,7 @@ export function saveGoogleRefreshToken(refreshToken: string): void {
     JSON.stringify({ refresh_token: refreshToken }, null, 2),
     "utf8",
   );
-} // <-- This brace was missing
+}
 
 export function loadGoogleRefreshToken(): string {
   const refreshTokenPath = path.join(
@@ -110,4 +115,46 @@ export function createAuthenticatedGoogleOAuthClient() {
   });
 
   return client;
+}
+
+export function loadGoogleSheetsConfig(): GoogleSheetsConfig {
+  const spreadsheetConfigPath = path.join(
+    process.cwd(),
+    "secrets",
+    "google-sheets.json",
+  );
+
+  const spreadsheetConfigFile = fs.readFileSync(
+    spreadsheetConfigPath,
+    "utf8",
+  );
+
+  const config = JSON.parse(
+    spreadsheetConfigFile,
+  ) as GoogleSheetsConfig;
+
+  if (!config.spreadsheet_id) {
+    throw new Error("Google Spreadsheet ID was not found.");
+  }
+
+  if (!config.template_sheet) {
+    throw new Error("Google template sheet name was not found.");
+  }
+
+  return config;
+}
+
+export function loadGoogleSpreadsheetId(): string {
+  return loadGoogleSheetsConfig().spreadsheet_id;
+}
+
+export function loadGoogleTemplateSheet(): string {
+  return loadGoogleSheetsConfig().template_sheet;
+}
+
+export function createGoogleSheetsClient() {
+  return google.sheets({
+    version: "v4",
+    auth: createAuthenticatedGoogleOAuthClient(),
+  });
 }
