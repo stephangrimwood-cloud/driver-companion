@@ -41,6 +41,10 @@ type Report = {
   exportedToGoogleSheets?: boolean;
   exportedAt?: string;
   note?: string;
+
+  backedUpToGoogleSheets?: boolean;
+  backedUpAt?: string;
+  backupError?: string;
 };
 
 function parseAmount(value: string | undefined) {
@@ -562,6 +566,56 @@ export default function ReportsPage() {
                               <div className="font-medium text-zinc-300">
                                 = Driver Share
                               </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 grid grid-cols-2 gap-2">
+                            <div
+                              className={`rounded-xl border px-3 py-2 text-center ${
+                                report.backedUpToGoogleSheets
+                                  ? "border-sky-400/30 bg-sky-500/10"
+                                  : "border-red-400/30 bg-red-500/10"
+                              }`}
+                            >
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                                Cloud Backup
+                              </p>
+
+                              <p
+                                className={`mt-1 text-sm font-semibold ${
+                                  report.backedUpToGoogleSheets
+                                    ? "text-sky-200"
+                                    : "text-red-200"
+                                }`}
+                              >
+                                {report.backedUpToGoogleSheets
+                                  ? "☁ Backed Up"
+                                  : "⚠ Not Backed Up"}
+                              </p>
+                            </div>
+
+                            <div
+                              className={`rounded-xl border px-3 py-2 text-center ${
+                                report.exportedToGoogleSheets
+                                  ? "border-emerald-400/30 bg-emerald-500/10"
+                                  : "border-amber-400/30 bg-amber-500/10"
+                              }`}
+                            >
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+                                Monthly Ledger
+                              </p>
+
+                              <p
+                                className={`mt-1 text-sm font-semibold ${
+                                  report.exportedToGoogleSheets
+                                    ? "text-emerald-200"
+                                    : "text-amber-200"
+                                }`}
+                              >
+                                {report.exportedToGoogleSheets
+                                  ? "✓ Synced"
+                                  : "Pending Sync"}
+                              </p>
                             </div>
                           </div>
 
