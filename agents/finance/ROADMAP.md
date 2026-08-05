@@ -67,7 +67,7 @@
 
 ---
 
-## Phase 5 – Driver Companion Integration 🚧 Current
+## Phase 5 – Driver Companion Integration ✅ Complete
 
 ### Export ✅ Complete
 
@@ -102,26 +102,45 @@
 - [x] Preserve local storage as the working copy.
 - [x] Preserve Google Sheets as the independent backup.
 
-### Current Work
+### Backup and Sync Status ✅ Complete
 
-- [ ] Store backup success or failure on the local report.
-- [ ] Display separate Backup and Sync statuses.
-- [ ] Keep backup status after closing and reopening the app.
-- [ ] Clearly warn when a report is saved locally but cloud backup fails.
+- [x] Store backup success or failure on the local report.
+- [x] Store the successful backup timestamp.
+- [x] Store the backup error when cloud backup fails.
+- [x] Display separate Backup and Sync statuses.
+- [x] Keep backup status after closing and reopening the app.
+- [x] Clearly warn when a report is saved locally but cloud backup fails.
+- [x] Display whether the report is backed up to Google Sheets.
+- [x] Display whether the report has been synced to the monthly ledger.
 
 ---
 
-## Phase 6 – Backup Recovery
+## Phase 6 – Backup Recovery 🚧 Current
 
-- [ ] Create an API endpoint to read Driver Companion backups.
-- [ ] Read all backed-up report JSON from Google Sheets.
-- [ ] Validate restored report data.
-- [ ] Restore reports into local storage.
-- [ ] Prevent duplicate reports during restoration.
-- [ ] Add a Restore Reports control.
-- [ ] Show the number of reports available for restoration.
-- [ ] Confirm recovery after local storage is cleared.
-- [ ] Add backup and restore tests.
+### Cloud Recovery Foundation ✅ Complete
+
+- [x] Create an API endpoint to read Driver Companion backups.
+- [x] Read all backed-up report JSON from Google Sheets.
+- [x] Parse backup JSON into Driver Companion report objects.
+- [x] Validate restored report data.
+- [x] Compare cloud backups with local reports using Report ID.
+- [x] Show the number of cloud backups found.
+- [x] Show how many reports are missing locally.
+- [x] Display Cloud Backup Status on the Reports page.
+- [x] Add parser unit tests.
+- [x] Add comparer unit tests.
+
+### Restore Workflow 🚧 Current
+
+- [x] Restore only missing reports by default.
+- [x] Prevent duplicate reports during restoration.
+- [x] Add a Restore Reports control.
+- [x] Show a restore completion summary.
+- [x] Refresh the Reports page automatically after restoration.
+- [x] Confirm recovery after local storage is cleared.
+- [ ] Add an advanced option to replace all local reports.
+- [ ] Require confirmation before replacing local reports.
+- [ ] Add end-to-end backup and restore tests.
 
 ---
 

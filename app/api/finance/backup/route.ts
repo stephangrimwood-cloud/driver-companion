@@ -2,6 +2,39 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { SheetsAgent } from "../../../../agents/finance/sheets";
 
+import { parseReportBackups } from "../../../../agents/finance/parser";
+
+export async function GET() {
+  try {
+    const sheets = new SheetsAgent();
+
+    const backups = await sheets.readReportBackups();
+
+    const reports = parseReportBackups(backups);
+
+    return NextResponse.json({
+      success: true,
+      reports,
+    });
+    
+  } catch (error) {
+    console.error("Unable to read Driver Companion backups:", error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to read Driver Companion backups.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const report = await request.json();

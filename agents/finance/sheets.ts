@@ -46,7 +46,7 @@ export class SheetsAgent {
       },
     });
 
-        console.log(
+    console.log(
       `✓ Report exported to '${sheetName}' row ${rowNumber}.`,
     );
   }
@@ -99,4 +99,23 @@ export class SheetsAgent {
     );
   }
 
+  async readReportBackups(): Promise<string[]> {
+    const backupSheetName = "Driver Companion Backup";
+
+    const response =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${backupSheetName}'!E2:E`,
+      });
+
+    const rows = response.data.values ?? [];
+
+    return rows
+      .map((row) => row[0])
+      .filter(
+        (reportJson): reportJson is string =>
+          typeof reportJson === "string" &&
+          reportJson.trim().length > 0,
+      );
+  }
 }

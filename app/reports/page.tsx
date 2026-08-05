@@ -2,6 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  getCloudBackupSummary,
+  getMissingReports,
+  type CloudBackupSummary,
+} from "@/lib/restore";
 
 const REPORTS_STORAGE_KEY = "driver-companion-reports";
 
@@ -168,6 +173,10 @@ export default function ReportsPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [noteReportId, setNoteReportId] = useState<string | null>(null);
   const [noteText, setNoteText] = useState("");
+  const [cloudSummary, setCloudSummary] =
+    useState<CloudBackupSummary | null>(null);
+  const [isRestoringReports, setIsRestoringReports] = useState(false);
+  const [restoreMessage, setRestoreMessage] = useState("");    
 
   const [exportingReportId, setExportingReportId] = useState<string | null>(
     null,
@@ -192,7 +201,20 @@ export default function ReportsPage() {
   });
 
   useEffect(() => {
-    setReports(loadReports());
+    const localReports = loadReports();
+
+    setReports(localReports);
+
+    getCloudBackupSummary(localReports)
+      .then((summary) => {
+        setCloudSummary(summary);
+      })
+      .catch((error) => {
+        console.error(
+          "Unable to load cloud backup summary:",
+          error,
+        );
+      });
   }, []);
 
   const weeklyGross = weekDates.reduce((weekTotal, weekDay) => {
@@ -295,6 +317,63 @@ export default function ReportsPage() {
     }
   }
 
+  async function restoreMissingCloudReports() {
+    setIsRestoringReports(true);
+    setRestoreMessage("");
+
+    try {
+      const localReports = loadReports();
+
+      const missingReports = await getMissingReports(localReports);
+
+      const restoredReports: Report[] = missingReports.map((report) => ({
+        ...report,
+        backedUpToGoogleSheets: true,
+        backupError: undefined,
+      }));
+
+      const mergedReports: Report[] = [
+        ...restoredReports,
+        ...localReports,
+      ].sort(
+        (firstReport, secondReport) =>
+          new Date(secondReport.createdAt).getTime() -
+          new Date(firstReport.createdAt).getTime(),
+      );
+
+      localStorage.setItem(
+        REPORTS_STORAGE_KEY,
+        JSON.stringify(mergedReports),
+      );
+
+      setReports(mergedReports);
+
+      setCloudSummary((currentSummary) =>
+        currentSummary
+          ? {
+              ...currentSummary,
+              localReportCount: mergedReports.length,
+              missingReportCount: 0,
+            }
+          : null,
+      );
+
+      setRestoreMessage(
+        restoredReports.length === 1
+          ? "✓ 1 report restored successfully."
+          : `✓ ${restoredReports.length} reports restored successfully.`,
+      );
+    } catch (error) {
+      console.error("Unable to restore reports:", error);
+
+      setRestoreMessage(
+        "Restore failed. Existing local reports were not changed.",
+      );
+    } finally {
+      setIsRestoringReports(false);
+    }
+  }
+
   return (
 
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
@@ -349,6 +428,105 @@ export default function ReportsPage() {
               Home
             </Link>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-sky-300">
+            ☁ Cloud Backup Status
+          </p>
+
+          {cloudSummary === null ? (
+            <p className="mt-3 text-sm text-zinc-300">
+              Checking cloud backups...
+            </p>
+          ) : (
+            <>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 px-2 py-3">
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                    Cloud
+                  </p>
+
+                  <p className="mt-1 text-lg font-semibold text-sky-200">
+                    {cloudSummary.cloudReportCount}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 px-2 py-3">
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                    Device
+                  </p>
+
+                  <p className="mt-1 text-lg font-semibold text-zinc-200">
+                    {cloudSummary.localReportCount}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-zinc-700 bg-zinc-900/30 px-2 py-3">
+                  <p className="text-[11px] uppercase tracking-wide text-zinc-500">
+                    Missing
+                  </p>
+
+                  <p
+                    className={`mt-1 text-lg font-semibold ${
+                      cloudSummary.missingReportCount === 0
+                        ? "text-emerald-300"
+                        : "text-amber-300"
+                    }`}
+                  >
+                    {cloudSummary.missingReportCount}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-3 text-sm text-zinc-300">
+                {cloudSummary.missingReportCount === 0 ? (
+                  <>
+                    <span className="font-semibold text-emerald-300">
+                      ✓ Device is fully synchronised.
+                    </span>
+
+                    <br />
+
+                    No reports require restoration.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-amber-300">
+                      ⚠ {cloudSummary.missingReportCount} report
+                      {cloudSummary.missingReportCount === 1 ? "" : "s"} available for
+                      restoration.
+                    </span>
+
+                    <br />
+
+                    Restore available from your cloud backup.
+                  </>
+                )}
+              </p>
+
+              {cloudSummary.missingReportCount > 0 && (
+                <button
+                  type="button"
+                  onClick={restoreMissingCloudReports}
+                  disabled={isRestoringReports}
+                  className="mt-4 w-full rounded-xl border border-sky-400/30 bg-sky-500/10 px-4 py-3 text-sm font-semibold text-sky-200 transition hover:bg-sky-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isRestoringReports
+                    ? "Restoring reports..."
+                    : `Restore ${cloudSummary.missingReportCount} Report${
+                        cloudSummary.missingReportCount === 1 ? "" : "s"
+                      }`}
+                </button>
+              )}
+
+              {restoreMessage && (
+                <p className="mt-3 text-sm text-zinc-300">
+                  {restoreMessage}
+                </p>
+              )}
+            </>
+          )}
         </section>
 
         <section className="space-y-3 rounded-2xl bg-[#3a3a3b] p-4">

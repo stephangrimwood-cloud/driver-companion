@@ -4,6 +4,99 @@ All notable changes to Agent 001 are documented here.
 
 ---
 
+# Version 0.0.4
+
+## Added
+
+### Cloud Recovery
+
+- Backup recovery API endpoint.
+- Backup JSON parser.
+- Backup validation.
+- Cloud backup comparison engine.
+- Restore helper service.
+- Cloud Backup Status panel on the Reports page.
+- Automatic cloud synchronisation check when Reports opens.
+- Missing report detection.
+- Safe comparison using Report ID.
+- Parser unit tests.
+- Comparer unit tests.
+
+---
+
+## Changed
+
+### Reports
+
+- Reports page now checks cloud backup health automatically.
+- Added persistent Cloud Backup Status panel.
+- Reports now display whether the device is fully synchronised with cloud backups.
+- Missing cloud reports are detected without modifying local storage.
+
+### Recovery Workflow
+
+- Restore architecture now separates:
+  - Reading cloud backups.
+  - Parsing report data.
+  - Validation.
+  - Comparison.
+  - Future restoration.
+
+---
+
+## Engineering
+
+- Introduced `parser.ts` to safely convert backup JSON into Driver Companion report objects.
+- Introduced `comparer.ts` to compare local reports against cloud backups.
+- Introduced `restore.ts` to isolate recovery logic from the Reports page.
+- Reduced coupling between the user interface and Finance Agent.
+- Improved type safety by comparing reports using Report ID references.
+- Established the foundation for full disaster recovery.
+
+---
+
+## Milestone
+
+### **Milestone 008 — Cloud Recovery Foundation** ✅
+
+Driver Companion can now safely inspect cloud backups without modifying local data.
+
+Recovery now follows a dedicated pipeline:
+
+```
+Reports Page
+        │
+        ▼
+ Restore Service
+        │
+        ▼
+ Backup API
+        │
+        ▼
+  SheetsAgent
+        │
+        ▼
+Google Sheets
+        │
+        ▼
+    Parser
+        │
+        ▼
+  Validation
+        │
+        ▼
+   Comparer
+        │
+        ▼
+ Cloud Status
+```
+
+The application now automatically determines whether reports are missing locally and presents the result through the new **Cloud Backup Status** panel.
+
+This milestone establishes the complete recovery foundation required for future one-click report restoration while preserving the integrity of existing local data.
+
+---
+
 # Version 0.0.3
 
 ## Added
