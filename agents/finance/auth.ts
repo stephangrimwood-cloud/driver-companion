@@ -4,11 +4,25 @@ import { google } from "googleapis";
 
 import type { GoogleSheetsConfig } from "./types";
 
-const credentialsPath = path.join(
+const localCredentialsPath = path.join(
   process.cwd(),
   "secrets",
   "gmail-oauth-client.json",
 );
+
+const localRefreshTokenPath = path.join(
+  process.cwd(),
+  "secrets",
+  "gmail-refresh-token.json",
+);
+
+const localSheetsConfigPath = path.join(
+  process.cwd(),
+  "secrets",
+  "google-sheets.json",
+);
+
+const localRedirectUri = "http://localhost:3005";
 
 type GoogleOAuthCredentials = {
   installed?: {
@@ -23,15 +37,56 @@ type GoogleOAuthCredentials = {
   };
 };
 
+function readEnvironmentValue(
+  variableName: string,
+): string | undefined {
+  const value = process.env[variableName]?.trim();
+
+  return value ? value : undefined;
+}
+
 export function loadGoogleCredentials(): GoogleOAuthCredentials {
-  const credentialsFile = fs.readFileSync(credentialsPath, "utf8");
+  const clientId = readEnvironmentValue(
+    "GOOGLE_OAUTH_CLIENT_ID",
+  );
+
+  const clientSecret = readEnvironmentValue(
+    "GOOGLE_OAUTH_CLIENT_SECRET",
+  );
+
+  const redirectUri =
+    readEnvironmentValue("GOOGLE_OAUTH_REDIRECT_URI") ??
+    localRedirectUri;
+
+  if (clientId || clientSecret) {
+    if (!clientId || !clientSecret) {
+      throw new Error(
+        "GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET must both be configured.",
+      );
+    }
+
+    return {
+      web: {
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uris: [redirectUri],
+      },
+    };
+  }
+
+  const credentialsFile = fs.readFileSync(
+    localCredentialsPath,
+    "utf8",
+  );
 
   const credentials = JSON.parse(
     credentialsFile,
   ) as GoogleOAuthCredentials;
 
   if (!credentials.installed && !credentials.web) {
-    throw new Error("Invalid Google OAuth credentials file.");
+    throw new Error(
+      "Invalid Google OAuth credentials file.",
+    );
   }
 
   return credentials;
@@ -42,13 +97,19 @@ export function createGoogleOAuthClient() {
   const client = credentials.installed ?? credentials.web;
 
   if (!client) {
-    throw new Error("Google OAuth client configuration was not found.");
+    throw new Error(
+      "Google OAuth client configuration was not found.",
+    );
   }
+
+  const redirectUri =
+    readEnvironmentValue("GOOGLE_OAUTH_REDIRECT_URI") ??
+    localRedirectUri;
 
   return new google.auth.OAuth2(
     client.client_id,
     client.client_secret,
-    "http://localhost:3005",
+    redirectUri,
   );
 }
 
@@ -65,7 +126,9 @@ export function generateGoogleAuthorisationUrl(): string {
   });
 }
 
-export async function exchangeAuthorisationCode(code: string) {
+export async function exchangeAuthorisationCode(
+  code: string,
+) {
   const client = createGoogleOAuthClient();
 
   const { tokens } = await client.getToken(code);
@@ -73,30 +136,39 @@ export async function exchangeAuthorisationCode(code: string) {
   return tokens;
 }
 
-export function saveGoogleRefreshToken(refreshToken: string): void {
-  const refreshTokenPath = path.join(
-    process.cwd(),
-    "secrets",
-    "gmail-refresh-token.json",
-  );
-
+export function saveGoogleRefreshToken(
+  refreshToken: string,
+): void {
   fs.writeFileSync(
-    refreshTokenPath,
-    JSON.stringify({ refresh_token: refreshToken }, null, 2),
+    localRefreshTokenPath,
+    JSON.stringify(
+      {
+        refresh_token: refreshToken,
+      },
+      null,
+      2,
+    ),
     "utf8",
   );
 }
 
 export function loadGoogleRefreshToken(): string {
-  const refreshTokenPath = path.join(
-    process.cwd(),
-    "secrets",
-    "gmail-refresh-token.json",
+  const environmentRefreshToken = readEnvironmentValue(
+    "GOOGLE_OAUTH_REFRESH_TOKEN",
   );
 
-  const refreshTokenFile = fs.readFileSync(refreshTokenPath, "utf8");
+  if (environmentRefreshToken) {
+    return environmentRefreshToken;
+  }
 
-  const { refresh_token } = JSON.parse(refreshTokenFile) as {
+  const refreshTokenFile = fs.readFileSync(
+    localRefreshTokenPath,
+    "utf8",
+  );
+
+  const { refresh_token } = JSON.parse(
+    refreshTokenFile,
+  ) as {
     refresh_token: string;
   };
 
@@ -118,14 +190,29 @@ export function createAuthenticatedGoogleOAuthClient() {
 }
 
 export function loadGoogleSheetsConfig(): GoogleSheetsConfig {
-  const spreadsheetConfigPath = path.join(
-    process.cwd(),
-    "secrets",
-    "google-sheets.json",
+  const spreadsheetId = readEnvironmentValue(
+    "GOOGLE_SHEETS_SPREADSHEET_ID",
   );
 
+  const templateSheet = readEnvironmentValue(
+    "GOOGLE_SHEETS_TEMPLATE_SHEET",
+  );
+
+  if (spreadsheetId || templateSheet) {
+    if (!spreadsheetId || !templateSheet) {
+      throw new Error(
+        "GOOGLE_SHEETS_SPREADSHEET_ID and GOOGLE_SHEETS_TEMPLATE_SHEET must both be configured.",
+      );
+    }
+
+    return {
+      spreadsheet_id: spreadsheetId,
+      template_sheet: templateSheet,
+    };
+  }
+
   const spreadsheetConfigFile = fs.readFileSync(
-    spreadsheetConfigPath,
+    localSheetsConfigPath,
     "utf8",
   );
 
@@ -134,11 +221,15 @@ export function loadGoogleSheetsConfig(): GoogleSheetsConfig {
   ) as GoogleSheetsConfig;
 
   if (!config.spreadsheet_id) {
-    throw new Error("Google Spreadsheet ID was not found.");
+    throw new Error(
+      "Google Spreadsheet ID was not found.",
+    );
   }
 
   if (!config.template_sheet) {
-    throw new Error("Google template sheet name was not found.");
+    throw new Error(
+      "Google template sheet name was not found.",
+    );
   }
 
   return config;
