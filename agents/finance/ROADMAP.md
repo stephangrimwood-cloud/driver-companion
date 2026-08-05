@@ -122,25 +122,39 @@
 - [x] Create an API endpoint to read Driver Companion backups.
 - [x] Read all backed-up report JSON from Google Sheets.
 - [x] Parse backup JSON into Driver Companion report objects.
-- [x] Validate restored report data.
+- [x] Validate restored report data before recovery.
+- [x] Safely skip malformed or incomplete backup records.
 - [x] Compare cloud backups with local reports using Report ID.
 - [x] Show the number of cloud backups found.
-- [x] Show how many reports are missing locally.
+- [x] Show how many reports are stored on the device.
+- [x] Show how many cloud reports are missing locally.
 - [x] Display Cloud Backup Status on the Reports page.
 - [x] Add parser unit tests.
 - [x] Add comparer unit tests.
 
-### Restore Workflow 🚧 Current
+### Safe Restore Workflow ✅ Complete
 
-- [x] Restore only missing reports by default.
-- [x] Prevent duplicate reports during restoration.
+- [x] Restore only reports missing from the device.
+- [x] Preserve all existing local reports.
+- [x] Prevent restored reports from overwriting local reports.
+- [x] Prevent duplicate Report IDs already stored locally.
+- [x] Prevent duplicate Report IDs within cloud backup data.
+- [x] Sort merged reports newest first.
 - [x] Add a Restore Reports control.
+- [x] Show restore progress.
 - [x] Show a restore completion summary.
 - [x] Refresh the Reports page automatically after restoration.
-- [x] Confirm recovery after local storage is cleared.
+- [x] Confirm successful recovery after local storage was cleared.
+- [x] Confirm restoration on a real mobile device.
+- [x] Add unit tests for the restore merge process.
+- [x] Connect the tested merge function to the live restore workflow.
+
+### Advanced Recovery 📋 Planned
+
 - [ ] Add an advanced option to replace all local reports.
-- [ ] Require confirmation before replacing local reports.
-- [ ] Add end-to-end backup and restore tests.
+- [ ] Require an explicit warning and confirmation before replacement.
+- [ ] Create an automatic local backup before replacing reports.
+- [ ] Add automated end-to-end backup and restore tests.
 
 ---
 

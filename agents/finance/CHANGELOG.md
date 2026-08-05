@@ -4,6 +4,118 @@ All notable changes to Agent 001 are documented here.
 
 ---
 
+# Version 0.0.5
+
+## Added
+
+### Safe Cloud Restoration
+
+- One-click restoration of reports missing from the current device.
+- Restore progress state on the Reports page.
+- Restore completion message showing the number of reports recovered.
+- Tested report merge helper.
+- Duplicate protection for reports already stored locally.
+- Duplicate protection for repeated Report IDs within cloud backup data.
+- Automatic newest-first ordering after restoration.
+- Unit tests for the report merge process.
+
+---
+
+## Changed
+
+### Reports
+
+- The Cloud Backup Status panel now displays a Restore Reports button when cloud reports are missing locally.
+- Restored reports appear immediately without requiring a manual page reload.
+- Cloud, Device, and Missing counts update automatically after successful restoration.
+- The restore button is hidden when no reports require recovery.
+
+### Recovery Workflow
+
+- The Reports page now retrieves only reports missing from the current device.
+- Missing cloud reports are safely merged with existing local reports.
+- Existing local reports are preserved and never overwritten by the standard restore process.
+- The live restore workflow now uses the tested `mergeMissingReports()` helper.
+- Restored reports are marked as successfully backed up to Google Sheets.
+
+---
+
+## Engineering
+
+- Added `mergeMissingReports()` to isolate report merging from the user interface.
+- Added immutable merge behaviour that does not modify the original report arrays.
+- Added Report ID tracking during merging to prevent duplicate cloud records.
+- Added full validation of required financial and report fields before restoration.
+- Connected validated cloud data to the device `localStorage` recovery workflow.
+- Increased automated test coverage to 6 test files and 22 passing tests.
+
+---
+
+## Milestone
+
+### **Milestone 009 — Safe Cloud Report Restoration** ✅
+
+Driver Companion can now recover missing reports from its Google Sheets backup and safely return them to the current device.
+
+The completed restoration pipeline is:
+
+```text
+Reports Page
+        │
+        ▼
+Cloud Backup Status
+        │
+        ▼
+ Restore Control
+        │
+        ▼
+ Restore Service
+        │
+        ▼
+ Backup API
+        │
+        ▼
+  SheetsAgent
+        │
+        ▼
+Google Sheets
+        │
+        ▼
+    Parser
+        │
+        ▼
+  Full Validation
+        │
+        ▼
+   Comparer
+        │
+        ▼
+ Tested Merge Helper
+        │
+        ▼
+ Device Local Storage
+        │
+        ▼
+ Updated Reports Page
+```
+
+The workflow restores only reports that are missing from the device. Existing local reports are preserved, duplicate Report IDs are rejected, and the merged report collection is sorted newest first.
+
+A complete recovery was successfully confirmed on a real mobile device after its local report storage had been cleared:
+
+```text
+Cloud: 4
+Device before restore: 0
+Missing: 4
+Reports restored: 4
+Device after restore: 4
+Missing after restore: 0
+```
+
+This milestone establishes a working disaster-recovery process for Driver Companion reports while protecting the integrity of existing local data.
+
+---
+
 # Version 0.0.4
 
 ## Added
