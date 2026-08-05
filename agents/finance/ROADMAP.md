@@ -115,7 +115,7 @@
 
 ---
 
-## Phase 6 – Backup Recovery 🚧 Current
+## Phase 6 – Backup Recovery ✅ Complete
 
 ### Cloud Recovery Foundation ✅ Complete
 
@@ -145,16 +145,35 @@
 - [x] Show a restore completion summary.
 - [x] Refresh the Reports page automatically after restoration.
 - [x] Confirm successful recovery after local storage was cleared.
-- [x] Confirm restoration on a real mobile device.
 - [x] Add unit tests for the restore merge process.
 - [x] Connect the tested merge function to the live restore workflow.
 
-### Advanced Recovery 📋 Planned
+### Production Recovery Verification ✅ Complete
+
+- [x] Configure protected Google credentials through Vercel environment variables.
+- [x] Keep local JSON credential files available for development only.
+- [x] Confirm the production build completes successfully.
+- [x] Confirm all 26 automated tests pass.
+- [x] Deploy recovery support to the production Vercel application.
+- [x] Confirm production can read Google Sheets backups.
+- [x] Restore four missing reports through the stable production domain.
+- [x] Confirm restored reports persist after a browser refresh.
+- [x] Confirm production restoration on a desktop browser.
+- [x] Confirm production restoration on a mobile device.
+- [x] Reinstall Driver Companion as a production PWA.
+- [x] Confirm restored reports persist inside the installed PWA.
+- [x] Confirm report backup works over the mobile network.
+- [x] Confirm monthly ledger export works over the mobile network.
+
+---
+
+## Future Recovery Enhancements 📋 Planned
 
 - [ ] Add an advanced option to replace all local reports.
 - [ ] Require an explicit warning and confirmation before replacement.
 - [ ] Create an automatic local backup before replacing reports.
-- [ ] Add automated end-to-end backup and restore tests.
+- [ ] Add automated browser-level end-to-end backup and restore tests.
+- [ ] Add coordinated deletion options for local reports, cloud backups, and ledger entries.
 
 ---
 
