@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   getCloudBackupSummary,
   getMissingReports,
+  mergeMissingReports,
   type CloudBackupSummary,
 } from "@/lib/restore";
 
@@ -332,13 +333,9 @@ export default function ReportsPage() {
         backupError: undefined,
       }));
 
-      const mergedReports: Report[] = [
-        ...restoredReports,
-        ...localReports,
-      ].sort(
-        (firstReport, secondReport) =>
-          new Date(secondReport.createdAt).getTime() -
-          new Date(firstReport.createdAt).getTime(),
+      const mergedReports = mergeMissingReports(
+        localReports,
+        restoredReports,
       );
 
       localStorage.setItem(

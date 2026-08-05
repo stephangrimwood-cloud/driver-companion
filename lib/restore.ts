@@ -1,5 +1,5 @@
-import { findMissingReports } from "@/agents/finance/comparer";
-import { RestorableReport } from "@/agents/finance/parser";
+import { findMissingReports } from "../agents/finance/comparer";
+import type { RestorableReport } from "../agents/finance/parser";
 
 type LocalReportReference = {
   id: string;
@@ -66,4 +66,33 @@ export async function getCloudBackupSummary(
     localReportCount: localReports.length,
     missingReportCount: missingReports.length,
   };
+}
+
+type StoredReportReference = {
+  id: string;
+  createdAt: string;
+};
+
+export function mergeMissingReports<
+  T extends StoredReportReference,
+>(
+  localReports: T[],
+  missingReports: T[],
+): T[] {
+  const localIds = new Set(
+    localReports.map((report) => report.id),
+  );
+
+  const uniqueMissingReports = missingReports.filter(
+    (report) => !localIds.has(report.id),
+  );
+
+  return [
+    ...uniqueMissingReports,
+    ...localReports,
+  ].sort(
+    (firstReport, secondReport) =>
+      new Date(secondReport.createdAt).getTime() -
+      new Date(firstReport.createdAt).getTime(),
+  );
 }
