@@ -8,6 +8,7 @@ import {
 
 import {
   getCloudBackupSummary,
+  getMissingReports,
   mergeMissingReports,
 } from "./restore";
 
@@ -90,6 +91,46 @@ describe("Cloud backup summary", () => {
         getCloudBackupSummary([]),
     ).rejects.toThrow("Cloud backup response was invalid.");
     });
+
+    describe("Missing cloud reports", () => {
+        it("returns only cloud reports not already stored locally", async () => {
+            vi.stubGlobal(
+            "fetch",
+            vi.fn().mockResolvedValue({
+                ok: true,
+                json: async () => ({
+                success: true,
+                reports: [
+                    {
+                    id: "report-1",
+                    createdAt: "2026-08-04T10:00:00.000Z",
+                    shiftDate: "2026-08-04",
+                    },
+                    {
+                    id: "report-2",
+                    createdAt: "2026-08-05T10:00:00.000Z",
+                    shiftDate: "2026-08-05",
+                    },
+                ],
+                }),
+            }),
+            );
+
+            const missingReports = await getMissingReports([
+            {
+                id: "report-1",
+            },
+            ]);
+
+            expect(missingReports).toEqual([
+            {
+                id: "report-2",
+                createdAt: "2026-08-05T10:00:00.000Z",
+                shiftDate: "2026-08-05",
+            },
+            ]);
+        });
+        });
 
 describe("Restore report merger", () => {
   it("adds missing reports and sorts newest first", () => {
