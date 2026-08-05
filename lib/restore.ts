@@ -79,12 +79,19 @@ export function mergeMissingReports<
   localReports: T[],
   missingReports: T[],
 ): T[] {
-  const localIds = new Set(
+  const seenIds = new Set(
     localReports.map((report) => report.id),
   );
 
   const uniqueMissingReports = missingReports.filter(
-    (report) => !localIds.has(report.id),
+    (report) => {
+      if (seenIds.has(report.id)) {
+        return false;
+      }
+
+      seenIds.add(report.id);
+      return true;
+    },
   );
 
   return [

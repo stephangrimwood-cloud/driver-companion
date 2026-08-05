@@ -52,6 +52,28 @@ describe("Restore report merger", () => {
     ).toEqual(localReports);
   });
 
+  it("adds only one copy when the cloud list contains duplicate IDs", () => {
+    const missingReports = [
+      {
+        id: "report-2",
+        createdAt: "2026-08-05T10:00:00.000Z",
+      },
+      {
+        id: "report-2",
+        createdAt: "2026-08-05T10:00:00.000Z",
+      },
+    ];
+
+    expect(
+      mergeMissingReports([], missingReports),
+    ).toEqual([
+      {
+        id: "report-2",
+        createdAt: "2026-08-05T10:00:00.000Z",
+      },
+    ]);
+  });
+
   it("does not modify the original arrays", () => {
     const localReports = [
       {
