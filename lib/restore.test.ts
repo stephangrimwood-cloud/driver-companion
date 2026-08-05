@@ -74,6 +74,23 @@ describe("Cloud backup summary", () => {
   });
 });
 
+    it("rejects an invalid cloud backup response", async () => {
+    vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+            success: false,
+            reports: null,
+        }),
+        }),
+    );
+
+    await expect(
+        getCloudBackupSummary([]),
+    ).rejects.toThrow("Cloud backup response was invalid.");
+    });
+
 describe("Restore report merger", () => {
   it("adds missing reports and sorts newest first", () => {
     const localReports = [
