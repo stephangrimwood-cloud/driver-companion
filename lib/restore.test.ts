@@ -1,6 +1,78 @@
-import { describe, expect, it } from "vitest";
+import {
+  afterEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
-import { mergeMissingReports } from "./restore";
+import {
+  getCloudBackupSummary,
+  mergeMissingReports,
+} from "./restore";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("Cloud backup summary", () => {
+  it("reports cloud, device, and missing report counts", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          success: true,
+          reports: [
+            {
+              id: "report-1",
+              createdAt: "2026-08-04T10:00:00.000Z",
+              shiftDate: "2026-08-04",
+            },
+            {
+              id: "report-2",
+              createdAt: "2026-08-05T10:00:00.000Z",
+              shiftDate: "2026-08-05",
+            },
+          ],
+        }),
+      }),
+    );
+
+    const summary = await getCloudBackupSummary([
+      {
+        id: "report-1",
+      },
+    ]);
+
+    expect(summary).toEqual({
+      cloudReportCount: 2,
+      localReportCount: 1,
+      missingReportCount: 1,
+    });
+
+    expect(fetch).toHaveBeenCalledWith(
+      "/api/finance/backup",
+    );
+  });
+
+  it("rejects when the cloud backup API cannot be reached", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+      }),
+    );
+
+    await expect(
+      getCloudBackupSummary([
+        {
+          id: "report-1",
+        },
+      ]),
+    ).rejects.toThrow("Unable to read cloud backups.");
+  });
+});
 
 describe("Restore report merger", () => {
   it("adds missing reports and sorts newest first", () => {
