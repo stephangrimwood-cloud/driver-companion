@@ -15,6 +15,7 @@ import type {
   EmailAttachmentMetadata,
   EmailClassification,
   FinanceAgentConfig,
+  InvoiceEmailRecord,
   RemittanceEmailRecord,
   RemittancePaymentLine,
 } from "./types";
@@ -44,7 +45,7 @@ export class GmailAgent {
     const response = await gmail.users.messages.list({
       userId: "me",
       maxResults: 5,
-      q: GMAIL_SEARCH_QUERIES.ACCOUNT_BOOKINGS,
+      q: GMAIL_SEARCH_QUERIES.INVOICES,
     });
 
     const firstMessage = response.data.messages?.[0];
@@ -74,6 +75,7 @@ export class GmailAgent {
     let remittancePaymentDate: string | null = null;
     let remittancePdfTotal: number | null = null;
     let accountBookingReference: string | null = null;
+    let invoicePdfText: string | null = null;
 
     const firstAttachment = attachments[0];
 
@@ -125,6 +127,8 @@ export class GmailAgent {
             await pdfParser.getText();
 
           console.log("PDF text:", pdfTextResult.text);
+
+          invoicePdfText = pdfTextResult.text;
 
           remittancePaymentLines =
             GmailAgent.extractRemittancePaymentLines(
@@ -228,6 +232,19 @@ export class GmailAgent {
         accountBookingReference,
       );
 
+      const invoiceRecord =
+        classification === "INVOICE" &&
+        invoicePdfText !== null
+          ? GmailAgent.createInvoiceRecord(
+              firstMessage.id!,
+              from,
+              subject,
+              date,
+              invoicePdfText,
+              attachments,
+            )
+          : null;
+
     console.log("From:", from);
     console.log("Subject:", subject);
     console.log("Date:", date);
@@ -250,6 +267,10 @@ export class GmailAgent {
     console.log(
       "Account Booking record:",
       accountBookingRecord,
+    );
+    console.log(
+      "Invoice record:",
+      invoiceRecord,
     );
     console.log("Email preview:", snippet);
     console.log(
@@ -284,6 +305,18 @@ export class GmailAgent {
       )
     ) {
       return "ACCOUNT_BOOKING";
+    }
+
+    if (
+      isXeroSender &&
+      subject.startsWith(
+        EMAIL_SUBJECT_PREFIXES.INVOICE,
+      ) &&
+      subject.includes(
+        "from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver",
+      )
+    ) {
+      return "INVOICE";
     }
 
     if (
@@ -470,6 +503,133 @@ export class GmailAgent {
     );
 
     return match?.[1] ?? null;
+  }
+
+  static extractInvoiceNumber(
+    pdfText: string,
+  ): string | null {
+    const match = pdfText.match(
+      /Invoice Number\s+(INV-\d+)/,
+    );
+
+    return match?.[1] ?? null;
+  }
+
+  static extractInvoiceDate(
+    pdfText: string,
+  ): string | null {
+    const match = pdfText.match(
+      /Invoice Date\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})/,
+    );
+
+    return match?.[1] ?? null;
+  }
+
+  static extractInvoiceDueDate(
+    pdfText: string,
+  ): string | null {
+    const match = pdfText.match(
+      /Due Date:?\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})/,
+    );
+
+    return match?.[1] ?? null;
+  }
+
+  static extractInvoiceReference(
+    pdfText: string,
+  ): string | null {
+    const match = pdfText.match(
+      /Reference\s+(\d{8})/,
+    );
+
+    return match?.[1] ?? null;
+  }
+
+  static extractInvoiceTotal(
+    pdfText: string,
+  ): number | null {
+    const match = pdfText.match(
+      /TOTAL AUD\s+([\d,]+\.\d{2})/,
+    );
+
+    if (!match) {
+      return null;
+    }
+
+    return Number.parseFloat(
+      match[1].replace(/,/g, ""),
+    );
+  }
+
+  static extractInvoiceAmountDue(
+    pdfText: string,
+  ): number | null {
+    const match = pdfText.match(
+      /Amount Due\s+([\d,]+\.\d{2})/,
+    );
+
+    if (!match) {
+      return null;
+    }
+
+    return Number.parseFloat(
+      match[1].replace(/,/g, ""),
+    );
+  }
+
+  static createInvoiceRecord(
+    messageId: string,
+    from: string,
+    subject: string,
+    emailDate: string,
+    pdfText: string,
+    attachments: EmailAttachmentMetadata[],
+  ): InvoiceEmailRecord {
+    const invoiceNumber =
+      this.extractInvoiceNumber(pdfText);
+    const invoiceDate =
+      this.extractInvoiceDate(pdfText);
+    const dueDate =
+      this.extractInvoiceDueDate(pdfText);
+    const invoiceReference =
+      this.extractInvoiceReference(pdfText);
+    const amountDue =
+      this.extractInvoiceAmountDue(pdfText);
+    const invoiceTotal =
+      this.extractInvoiceTotal(pdfText);
+
+    const amountDueMatchesInvoiceTotal =
+      amountDue !== null &&
+      invoiceTotal !== null &&
+      Math.abs(amountDue - invoiceTotal) < 0.001;
+
+    const hasRequiredFields =
+      invoiceNumber !== null &&
+      invoiceDate !== null &&
+      dueDate !== null &&
+      invoiceReference !== null &&
+      amountDue !== null &&
+      invoiceTotal !== null;
+
+    return {
+      messageId,
+      from,
+      subject,
+      emailDate,
+      invoiceNumber,
+      invoiceDate,
+      dueDate,
+      invoiceReference,
+      amountDue,
+      invoiceTotal,
+      amountDueMatchesInvoiceTotal,
+      validationStatus:
+        hasRequiredFields &&
+        amountDueMatchesInvoiceTotal
+          ? "VALID"
+          : "REVIEW_REQUIRED",
+      attachments,
+    };
   }
 
   static extractAttachmentMetadata(

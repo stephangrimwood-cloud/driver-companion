@@ -5,7 +5,7 @@ export const EMAIL_SENDERS = {
 export const GMAIL_SEARCH_QUERIES = {
   REMITTANCES: `from:${EMAIL_SENDERS.XERO} subject:"Payment has been made by Cairns Taxis Limited"`,
   ACCOUNT_BOOKINGS: `from:${EMAIL_SENDERS.XERO} subject:"Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood"`,
-  INVOICES: "",
+  INVOICES: `from:${EMAIL_SENDERS.XERO} subject:"Invoice" subject:"from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver"`,
 };
 
 export const EMAIL_SUBJECT_PREFIXES = {
@@ -13,4 +13,6 @@ export const EMAIL_SUBJECT_PREFIXES = {
     "Payment has been made by Cairns Taxis Limited",
   ACCOUNT_BOOKING:
     "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood",
+  INVOICE:
+    "Invoice ",
 };

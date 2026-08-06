@@ -752,4 +752,194 @@ Total AUD paid 423.54
         "REVIEW_REQUIRED",
       );
     });
+
+    it("classifies a Cairns Taxis invoice email", () => {
+      const from =
+        "Shirley Foley <messaging-service@post.xero.com>";
+      const subject =
+        "Invoice INV-14272 from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver";
+
+      const classification = GmailAgent.classifyEmail(
+        from,
+        subject,
+      );
+
+      expect(classification).toBe("INVOICE");
+    });
+
+    it("does not classify an invoice subject from another sender", () => {
+      const from = "example@example.com";
+      const subject =
+        "Invoice INV-14272 from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver";
+
+      const classification = GmailAgent.classifyEmail(
+        from,
+        subject,
+      );
+
+      expect(classification).toBe("UNKNOWN");
+    });
+
+    it("extracts the invoice number from an invoice PDF", () => {
+      const pdfText = `
+    TAX INVOICE
+    Invoice Number
+    INV-14272
+    Reference
+    13072026
+    `;
+
+      const invoiceNumber =
+        GmailAgent.extractInvoiceNumber(pdfText);
+
+      expect(invoiceNumber).toBe("INV-14272");
+    });
+
+    it("extracts the invoice date from an invoice PDF", () => {
+      const pdfText = `
+    TAX INVOICE
+    Invoice Date
+    13 Jul 2026
+    Invoice Number
+    INV-14272
+    `;
+
+      const invoiceDate =
+        GmailAgent.extractInvoiceDate(pdfText);
+
+      expect(invoiceDate).toBe("13 Jul 2026");
+    });
+
+    it("extracts the due date from an invoice PDF", () => {
+      const pdfText = `
+    TAX INVOICE
+    Due Date: 22 Jul 2026
+    `;
+
+      const dueDate =
+        GmailAgent.extractInvoiceDueDate(pdfText);
+
+      expect(dueDate).toBe("22 Jul 2026");
+    });
+
+    it("extracts the reference from an invoice PDF", () => {
+      const pdfText = `
+    TAX INVOICE
+    Invoice Number
+    INV-14272
+    Reference
+    13072026
+    `;
+
+      const reference =
+        GmailAgent.extractInvoiceReference(pdfText);
+
+      expect(reference).toBe("13072026");
+    });
+
+    it("extracts the total from an invoice PDF", () => {
+      const pdfText = `
+    Subtotal 3.19
+    TOTAL GST 10% 0.31
+    TOTAL AUD 3.50
+    `;
+
+      const total =
+        GmailAgent.extractInvoiceTotal(pdfText);
+
+      expect(total).toBe(3.5);
+    });
+
+    it("extracts the amount due from an invoice PDF", () => {
+      const pdfText = `
+    Invoice Number INV-14272
+    Amount Due 3.50
+    Due Date 22 Jul 2026
+    `;
+
+      const amountDue =
+        GmailAgent.extractInvoiceAmountDue(pdfText);
+
+      expect(amountDue).toBe(3.5);
+    });
+
+    it("creates a valid invoice record", () => {
+      const record = GmailAgent.createInvoiceRecord(
+        "message-123",
+        "Shirley Foley <messaging-service@post.xero.com>",
+        "Invoice INV-14272 from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver",
+        "Mon, 13 Jul 2026 10:00:00 +1000",
+        `
+    Invoice Number
+    INV-14272
+    Invoice Date
+    13 Jul 2026
+    Reference
+    13072026
+    Amount Due 3.50
+    Due Date: 22 Jul 2026
+    TOTAL AUD 3.50
+    `,
+        [],
+      );
+
+      expect(record.invoiceNumber).toBe("INV-14272");
+      expect(record.invoiceDate).toBe("13 Jul 2026");
+      expect(record.dueDate).toBe("22 Jul 2026");
+      expect(record.invoiceReference).toBe("13072026");
+      expect(record.amountDue).toBe(3.5);
+      expect(record.invoiceTotal).toBe(3.5);
+      expect(record.amountDueMatchesInvoiceTotal).toBe(true);
+      expect(record.validationStatus).toBe("VALID");
+    });
+
+    it("marks an invoice for review when the totals do not match", () => {
+      const record = GmailAgent.createInvoiceRecord(
+        "message-123",
+        "Shirley Foley <messaging-service@post.xero.com>",
+        "Invoice INV-14272 from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver",
+        "Mon, 13 Jul 2026 10:00:00 +1000",
+        `
+    Invoice Number
+    INV-14272
+    Invoice Date
+    13 Jul 2026
+    Reference
+    13072026
+    Amount Due 3.50
+    Due Date: 22 Jul 2026
+    TOTAL AUD 4.50
+    `,
+        [],
+      );
+
+      expect(record.amountDueMatchesInvoiceTotal).toBe(false);
+      expect(record.validationStatus).toBe(
+        "REVIEW_REQUIRED",
+      );
+    });
+
+    it("marks an invoice for review when a required field is missing", () => {
+      const record = GmailAgent.createInvoiceRecord(
+        "message-123",
+        "Shirley Foley <messaging-service@post.xero.com>",
+        "Invoice INV-14272 from Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver",
+        "Mon, 13 Jul 2026 10:00:00 +1000",
+        `
+    Invoice Number
+    INV-14272
+    Invoice Date
+    13 Jul 2026
+    Amount Due 3.50
+    Due Date: 22 Jul 2026
+    TOTAL AUD 3.50
+    `,
+        [],
+      );
+
+      expect(record.invoiceReference).toBe(null);
+      expect(record.validationStatus).toBe(
+        "REVIEW_REQUIRED",
+      );
+    });
 });

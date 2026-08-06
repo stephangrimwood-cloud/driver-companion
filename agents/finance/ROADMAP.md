@@ -59,7 +59,7 @@
 
 - [x] Classify remittance emails.
 - [x] Classify account booking emails.
-- [ ] Classify invoice emails.
+- [x] Classify invoice emails.
 - [x] Record document metadata.
 - [x] Capture sender information.
 - [x] Capture payment amount from the email subject.
