@@ -4,6 +4,232 @@ All notable changes to Agent 001 are documented here.
 
 ---
 
+# Version 0.0.6
+
+## Added
+
+### Email Classification
+
+- Classification of Cairns Taxis remittance emails.
+- Classification of Account Booking payment emails.
+- Classification of Cairns Taxis invoice emails.
+- Sender verification using the recognised Xero messaging address.
+- Protection against matching subjects received from unrecognised senders.
+- Configurable Gmail search queries for each supported financial document type.
+- Sender name and sender email extraction.
+- Attachment metadata extraction.
+- Payment amount extraction from remittance and Account Booking email subjects.
+- Customer payment reference extraction.
+
+### PDF Document Processing
+
+- Automatic download of Gmail PDF attachments.
+- Local storage of downloaded financial documents.
+- PDF text extraction using `pdf-parse`.
+- Git exclusion for downloaded financial documents.
+
+### Remittance Processing
+
+- Remittance payment-line extraction.
+- Payment date extraction.
+- Shift reference extraction.
+- Invoice-date extraction from payment lines.
+- Invoice-total extraction.
+- Amount-paid extraction.
+- Remaining-balance extraction.
+- PDF total-paid extraction.
+- Comparison of:
+  - Email subject total.
+  - PDF total.
+  - Payment-line total.
+- Structured `RemittanceEmailRecord` creation.
+- `VALID` and `REVIEW_REQUIRED` validation states.
+
+### Account Booking Processing
+
+- Account Booking payment-date extraction.
+- Account Booking PDF-total extraction.
+- Seven-digit booking-reference extraction.
+- Comparison of email subject totals with PDF totals.
+- Structured `AccountBookingEmailRecord` creation.
+- `VALID` and `REVIEW_REQUIRED` validation states.
+
+### Invoice Processing
+
+- Invoice-number extraction.
+- Invoice-date extraction.
+- Invoice due-date extraction.
+- Invoice-reference extraction.
+- Amount-due extraction.
+- Invoice-total extraction.
+- Comparison of amount due with invoice total.
+- Structured `InvoiceEmailRecord` creation.
+- `VALID` and `REVIEW_REQUIRED` validation states.
+
+---
+
+## Changed
+
+### Finance Agent Structure
+
+- Renamed the Finance Agent directory:
+
+```text
+agents/finance
+↓
+agents/001-finance
+```
+
+- Updated Finance Agent package scripts.
+- Updated application API imports.
+- Updated report restoration imports.
+- Updated the PDF download path.
+- Updated `.gitignore` for the renamed downloads directory.
+- Restarted the TypeScript server after the folder rename to clear stale module references.
+
+### Repository
+
+- Renamed the GitHub repository:
+
+```text
+shift-income-report-calculator
+↓
+driver-companion
+```
+
+- Updated the local Git remote to:
+
+```text
+https://github.com/stephangrimwood-cloud/driver-companion.git
+```
+
+### Runtime
+
+- Finance Agent now creates document-specific runtime records.
+- Non-matching document types return `null` rather than creating incorrect records.
+- Downloaded attachments are stored under:
+
+```text
+agents/001-finance/downloads/
+```
+
+---
+
+## Validation
+
+### Real Cairns Taxis Documents
+
+The Finance Agent was verified against real examples of:
+
+- A standard Cairns Taxis remittance.
+- An Account Booking payment.
+- A Cairns Taxis invoice.
+
+The real invoice test successfully extracted:
+
+```text
+Invoice Number: INV-14272
+Invoice Date: 13 Jul 2026
+Due Date: 22 Jul 2026
+Invoice Reference: 13072026
+Amount Due: 3.50
+Invoice Total: 3.50
+Validation Status: VALID
+```
+
+The invoice customer identifier was kept separate from the invoice reference.
+
+---
+
+## Engineering
+
+- Added document-specific record types.
+- Added document-specific validation-status types.
+- Added extraction methods for all currently supported financial fields.
+- Added validation for missing required fields.
+- Added validation for conflicting totals.
+- Added runtime verification using Gmail and real PDF attachments.
+- Increased automated test coverage to:
+
+```text
+Test Files  7 passed
+Tests       74 passed
+```
+
+- Confirmed the complete test suite still passes after renaming the Finance Agent directory.
+- Confirmed `npm run finance` operates successfully from the renamed directory.
+- Confirmed the Git working tree is clean after committing and pushing all changes.
+
+---
+
+## Discoveries
+
+- Standard Remittances, Account Booking payments and Invoices use different PDF structures.
+- Account Booking PDFs contain a seven-digit booking reference.
+- Invoice PDFs contain both an invoice number and a separate invoice reference.
+- The customer identifier contained in an invoice email subject is not the invoice reference.
+- Financial documents with missing or conflicting information must be marked for review rather than accepted automatically.
+- Downloaded financial documents must remain local and must not be committed to Git.
+
+---
+
+## Milestone
+
+### **Milestone 010 — Email Classification and Document Processing** ✅
+
+Finance Agent can now:
+
+- Search Gmail for supported Cairns Taxis financial emails.
+- Classify Remittances, Account Bookings and Invoices.
+- Verify recognised senders.
+- Download PDF attachments.
+- Extract PDF text.
+- Parse document-specific financial information.
+- Compare related totals.
+- Produce structured financial records.
+- Mark records as `VALID` or `REVIEW_REQUIRED`.
+
+The completed processing pipeline is:
+
+```text
+Gmail
+  │
+  ▼
+Search Query
+  │
+  ▼
+Email Classification
+  │
+  ▼
+Sender Verification
+  │
+  ▼
+Attachment Metadata
+  │
+  ▼
+PDF Download
+  │
+  ▼
+PDF Text Extraction
+  │
+  ▼
+Document-Specific Parser
+  │
+  ▼
+Structured Financial Record
+  │
+  ▼
+Validation
+  │
+  ├── VALID
+  │
+  └── REVIEW_REQUIRED
+```
+
+This milestone establishes the verified financial-document foundation required for reconciliation with Driver Companion and Taxi Business Records.
+
+---
+
 # Version 0.0.5
 
 ## Added
@@ -175,7 +401,7 @@ Driver Companion can now safely inspect cloud backups without modifying local da
 
 Recovery now follows a dedicated pipeline:
 
-```
+```text
 Reports Page
         │
         ▼
@@ -298,7 +524,7 @@ Driver Companion successfully exports completed shift reports directly into the 
 
 Workflow:
 
-```
+```text
 Driver Companion
         │
         ▼

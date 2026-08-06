@@ -10,9 +10,9 @@ It compares data recorded by the driver against official financial documents rec
 
 # Version
 
-**Current Version:** 0.0.2 (Development)
+**Current Version:** 0.0.3 (Development)
 
-**Status:** Gmail Connectivity Complete
+**Status:** Email Classification and Document Processing Complete
 
 ---
 
@@ -24,7 +24,9 @@ It compares data recorded by the driver against official financial documents rec
   - Remittances
   - Account Bookings
   - Invoices
+- Download and read PDF attachments.
 - Extract financial information.
+- Validate document totals.
 - Read Driver Companion data.
 - Compare against Taxi Business Records.
 - Flag discrepancies for review.
@@ -79,33 +81,57 @@ It compares data recorded by the driver against official financial documents rec
 - [x] Retrieve an email by message ID.
 - [x] Extract email headers.
 - [x] Search Gmail using configurable search queries.
-- [x] Locate the first Cairns Taxis remittance email.
+- [x] Locate Cairns Taxis financial emails.
+- [x] Extract sender information.
+- [x] Record attachment metadata.
 
 ---
 
-## Phase 3 – Email Classification 🚧 Current Milestone
+## Phase 3 – Email Classification ✅ Complete
 
-- [ ] Classify remittance emails.
-- [ ] Classify account booking emails.
-- [ ] Classify invoice emails.
-- [ ] Record document metadata.
-
----
-
-## Phase 4 – Document Processing
-
-- [ ] Download PDF attachments.
-- [ ] Extract text from attachments.
-- [ ] Parse financial information.
-- [ ] Capture remittance reference numbers.
+- [x] Classify remittance emails.
+- [x] Classify account booking emails.
+- [x] Classify invoice emails.
+- [x] Reject matching subjects from unrecognised senders.
+- [x] Capture payment amounts from email subjects.
+- [x] Capture customer and payment references.
+- [x] Identify the shift or booking covered by each payment.
 
 ---
 
-## Phase 5 – Driver Companion Integration
+## Phase 4 – Document Processing ✅ Complete
 
+- [x] Download PDF attachments.
+- [x] Store downloaded documents locally.
+- [x] Exclude downloaded financial documents from Git.
+- [x] Extract text from PDF attachments.
+- [x] Parse remittance payment lines.
+- [x] Extract remittance payment dates.
+- [x] Extract remittance PDF totals.
+- [x] Extract account booking references.
+- [x] Extract account booking payment dates and totals.
+- [x] Extract invoice numbers.
+- [x] Extract invoice dates.
+- [x] Extract invoice due dates.
+- [x] Extract invoice references.
+- [x] Extract invoice amounts due.
+- [x] Extract invoice totals.
+- [x] Validate document totals.
+- [x] Mark valid documents as `VALID`.
+- [x] Mark incomplete or inconsistent documents as `REVIEW_REQUIRED`.
+
+---
+
+## Phase 5 – Driver Companion Integration 🚧 Current Milestone
+
+- [x] Connect to Google Sheets.
+- [x] Confirm access to Taxi Business Records.
 - [ ] Read Driver Companion reports.
-- [ ] Export Driver Companion reports to Google Sheets.
+- [ ] Match Finance Agent records with Driver Companion reports.
+- [ ] Export verified Driver Companion reports to Google Sheets.
 - [ ] Record remittance reference numbers.
+- [ ] Record account booking reference numbers.
+- [ ] Record invoice information.
 - [ ] Prevent duplicate exports.
 
 ---
@@ -114,49 +140,89 @@ It compares data recorded by the driver against official financial documents rec
 
 - [ ] Compare Gmail data with Driver Companion.
 - [ ] Compare Gmail data with Taxi Business Records.
-- [ ] Match transactions using reference numbers.
-- [ ] Flag discrepancies for review.
+- [ ] Match transactions using dates and reference numbers.
+- [ ] Flag missing transactions.
+- [ ] Flag conflicting totals.
+- [ ] Flag duplicate transactions.
 - [ ] Produce reconciliation reports.
+- [ ] Allow reviewed discrepancies to be resolved.
 
 ---
 
-# Recent Discoveries
+# Supported Financial Documents
 
-- Cairns Taxis remittance notifications are delivered via Xero.
-- Remittance emails contain useful metadata within the subject line.
-- Xero remittance PDFs include a unique payment reference suitable for reconciliation.
-- The payment reference should be stored within Taxi Business Records for audit purposes.
+## Remittances
 
----
+The Finance Agent can currently extract:
 
-# Project Status
+- Sender details.
+- Email date.
+- Payment amount from the email subject.
+- Customer payment reference.
+- PDF payment date.
+- Individual payment lines.
+- Invoice dates.
+- Shift references.
+- Invoice totals.
+- Amounts paid.
+- Remaining amounts.
+- PDF total paid.
 
-Authentication and Gmail connectivity are complete.
-
-The Finance Agent can:
-
-- Authenticate automatically using a stored refresh token.
-- Connect to Gmail.
-- Search for Cairns Taxis emails.
-- Read individual emails.
-- Extract key email metadata.
-
-The next milestone is to classify financial emails before progressing to document extraction and Driver Companion integration.
+The subject total, PDF total and payment-line total are compared before the record is marked as valid.
 
 ---
 
-# Engineering Philosophy
+## Account Bookings
 
-Driver Companion records reality.
+The Finance Agent can currently extract:
 
-Finance Agent verifies reality.
+- Sender details.
+- Email date.
+- Payment amount from the email subject.
+- PDF payment date.
+- PDF total.
+- Account Booking reference.
 
-Taxi Business Records preserve reality.
+The subject total and PDF total are compared before the record is marked as valid.
 
-Present facts.
+---
 
-Never guess.
+## Invoices
 
-Always verify.
+The Finance Agent can currently extract:
 
-If uncertain, flag for review.
+- Sender details.
+- Email date.
+- Invoice number.
+- Invoice date.
+- Due date.
+- Invoice reference.
+- Amount due.
+- Invoice total.
+- Attachment metadata.
+
+The amount due and invoice total are compared before the record is marked as valid.
+
+---
+
+# Validation
+
+Financial records receive one of two validation states:
+
+## `VALID`
+
+The required information was found and all relevant totals agree.
+
+## `REVIEW_REQUIRED`
+
+Information is missing, incomplete or inconsistent.
+
+The Finance Agent never invents missing information or silently accepts conflicting values.
+
+---
+
+# Current Test Status
+
+```text
+Test Files  7 passed
+Tests       74 passed
