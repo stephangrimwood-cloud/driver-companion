@@ -17,6 +17,10 @@ export type RemittanceValidationStatus =
   | "VALID"
   | "REVIEW_REQUIRED";
 
+export type AccountBookingValidationStatus =
+  | "VALID"
+  | "REVIEW_REQUIRED";
+
 export interface RemittanceEmailRecord {
   messageId: string;
   classification: "REMITTANCE";
@@ -35,6 +39,22 @@ export interface RemittanceEmailRecord {
   subjectTotalMatchesPdfTotal: boolean;
   allTotalsConsistent: boolean;
   validationStatus: RemittanceValidationStatus;
+}
+
+export interface AccountBookingEmailRecord {
+  messageId: string;
+  classification: "ACCOUNT_BOOKING";
+  subject: string;
+  receivedDate: string;
+  paymentDate: string | null;
+  pdfTotal: number | null;
+  bookingReference: string | null;
+  subjectTotalMatchesPdfTotal: boolean;
+  validationStatus: AccountBookingValidationStatus;
+  senderName: string | null;
+  senderEmail: string | null;
+  paymentAmount: number | null;
+  attachments: EmailAttachmentMetadata[];
 }
 
 export interface EmailAttachmentMetadata {

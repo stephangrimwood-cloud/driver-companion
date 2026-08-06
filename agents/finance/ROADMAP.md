@@ -57,13 +57,13 @@
 
 ## Phase 4 – Email Classification 🚧 Current
 
-- [ ] Classify remittance emails.
-- [ ] Classify account booking emails.
+- [x] Classify remittance emails.
+- [x] Classify account booking emails.
 - [ ] Classify invoice emails.
-- [ ] Record document metadata.
-- [ ] Capture sender information.
-- [ ] Capture payment amount from the email subject.
-- [ ] Identify the shift or shifts covered by each payment.
+- [x] Record document metadata.
+- [x] Capture sender information.
+- [x] Capture payment amount from the email subject.
+- [x] Identify the shift or booking covered by each payment.
 
 ---
 

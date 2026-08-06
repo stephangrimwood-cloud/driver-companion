@@ -589,4 +589,167 @@ Total AUD paid 423.54
             "REVIEW_REQUIRED",
         );
     });
+
+    it("classifies a Cairns Taxis account booking payment", () => {
+      const from =
+        "Tammy Sabbadin <messaging-service@post.xero.com>";
+      const subject =
+        "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70";
+
+      const classification = GmailAgent.classifyEmail(
+        from,
+        subject,
+      );
+
+      expect(classification).toBe("ACCOUNT_BOOKING");
+    });
+
+    it("does not classify an account booking subject from another sender", () => {
+      const from = "example@example.com";
+      const subject =
+        "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70";
+
+      const classification = GmailAgent.classifyEmail(
+        from,
+        subject,
+      );
+
+      expect(classification).toBe("UNKNOWN");
+    });
+
+    it("extracts the payment amount from an account booking subject", () => {
+      const subject =
+        "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70";
+
+      const amount =
+        GmailAgent.extractPaymentAmount(subject);
+
+      expect(amount).toBe(19.70);
+    });
+
+    it("creates a structured record from an account booking email", () => {
+      const messageId = "account-booking-message-123";
+      const from =
+        "Tammy Sabbadin <messaging-service@post.xero.com>";
+      const subject =
+        "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70";
+      const receivedDate =
+        "Mon, 03 Aug 2026 22:58:25 +0000";
+      const paymentDate = "28 Jul 2026";
+      const pdfTotal = 19.70;
+      const bookingReference = "8091343";
+      const attachments = [
+        {
+          filename: "account-booking-payment.pdf",
+          mimeType: "application/pdf",
+          attachmentId: "attachment-456",
+        },
+      ];
+
+      const record =
+        GmailAgent.createAccountBookingRecord(
+          messageId,
+          from,
+          subject,
+          receivedDate,
+          attachments,
+          paymentDate,
+          pdfTotal,
+          bookingReference,
+        );
+
+      expect(record).toEqual({
+        messageId: "account-booking-message-123",
+        classification: "ACCOUNT_BOOKING",
+        subject,
+        receivedDate,
+        paymentDate: "28 Jul 2026",
+        pdfTotal: 19.70,
+        bookingReference: "8091343",
+        subjectTotalMatchesPdfTotal: true,
+        validationStatus: "VALID",
+        senderName: "Tammy Sabbadin",
+        senderEmail: "messaging-service@post.xero.com",
+        paymentAmount: 19.70,
+        attachments,
+      });
+    });
+
+    it("does not create an account booking record for another sender", () => {
+      const record =
+        GmailAgent.createAccountBookingRecord(
+          "message-456",
+          "example@example.com",
+          "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70",
+          "Mon, 03 Aug 2026 22:58:25 +0000",
+          [],
+        );
+
+      expect(record).toBeNull();
+    });
+
+    it("extracts the booking reference from an account booking PDF", () => {
+      const pdfText = `
+    Invoice Date Reference Invoice Total Amount Paid Still Owing
+    27 Jul 2026 8091343 19.70 19.70 0.00
+    Total AUD 19.70 0.00
+    `;
+
+      const reference =
+        GmailAgent.extractAccountBookingReference(
+          pdfText,
+        );
+
+      expect(reference).toBe("8091343");
+    });
+
+    it("extracts the payment date from an account booking PDF", () => {
+      const pdfText = `
+    REMITTANCE ADVICE
+    Payment Date
+    28 Jul 2026
+    Sent Date
+    28 Jul 2026
+    `;
+
+      const paymentDate =
+        GmailAgent.extractRemittancePaymentDate(
+          pdfText,
+        );
+
+      expect(paymentDate).toBe("28 Jul 2026");
+    });
+
+    it("extracts the PDF total from an account booking PDF", () => {
+      const pdfText = `
+    REMITTANCE ADVICE
+    Total AUD paid 19.70
+    `;
+
+      const pdfTotal =
+        GmailAgent.extractRemittancePdfTotal(pdfText);
+
+      expect(pdfTotal).toBe(19.70);
+    });
+
+    it("marks an account booking for review when totals do not match", () => {
+      const record =
+        GmailAgent.createAccountBookingRecord(
+          "account-booking-message-456",
+          "Tammy Sabbadin <messaging-service@post.xero.com>",
+          "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70",
+          "Tue, 28 Jul 2026 02:23:34 +0000",
+          [],
+          "28 Jul 2026",
+          99.99,
+          "8091343",
+        );
+
+      expect(record?.subjectTotalMatchesPdfTotal).toBe(
+        false,
+      );
+      expect(record?.validationStatus).toBe(
+        "REVIEW_REQUIRED",
+      );
+    });
 });

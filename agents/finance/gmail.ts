@@ -3,16 +3,18 @@ import path from "node:path";
 import { PDFParse } from "pdf-parse";
 import { google } from "googleapis";
 
-import type { FinanceAgentConfig } from "./types";
 import { createAuthenticatedGoogleOAuthClient } from "./auth";
 import {
   EMAIL_SENDERS,
   EMAIL_SUBJECT_PREFIXES,
   GMAIL_SEARCH_QUERIES,
 } from "./constants";
+
 import type {
+  AccountBookingEmailRecord,
   EmailAttachmentMetadata,
   EmailClassification,
+  FinanceAgentConfig,
   RemittanceEmailRecord,
   RemittancePaymentLine,
 } from "./types";
@@ -42,7 +44,7 @@ export class GmailAgent {
     const response = await gmail.users.messages.list({
       userId: "me",
       maxResults: 5,
-      q: GMAIL_SEARCH_QUERIES.REMITTANCES,
+      q: GMAIL_SEARCH_QUERIES.ACCOUNT_BOOKINGS,
     });
 
     const firstMessage = response.data.messages?.[0];
@@ -71,6 +73,7 @@ export class GmailAgent {
     let remittancePaymentLines: RemittancePaymentLine[] = [];
     let remittancePaymentDate: string | null = null;
     let remittancePdfTotal: number | null = null;
+    let accountBookingReference: string | null = null;
 
     const firstAttachment = attachments[0];
 
@@ -128,13 +131,18 @@ export class GmailAgent {
               pdfTextResult.text,
             );
 
-            remittancePaymentDate =
+          remittancePaymentDate =
             GmailAgent.extractRemittancePaymentDate(
               pdfTextResult.text,
             );
 
-            remittancePdfTotal =
+          remittancePdfTotal =
             GmailAgent.extractRemittancePdfTotal(
+              pdfTextResult.text,
+            );
+
+          accountBookingReference =
+            GmailAgent.extractAccountBookingReference(
               pdfTextResult.text,
             );
 
@@ -152,7 +160,6 @@ export class GmailAgent {
             "Remittance payment total:",
             remittancePaymentTotal,
           );
-
         } finally {
           await pdfParser.destroy();
         }
@@ -195,7 +202,7 @@ export class GmailAgent {
       GmailAgent.doesRemittanceTotalMatch(
         paymentAmount,
         remittancePaymentLines,
-      );  
+      );
 
     const remittanceRecord =
       GmailAgent.createRemittanceRecord(
@@ -207,6 +214,18 @@ export class GmailAgent {
         remittancePaymentLines,
         remittancePaymentDate,
         remittancePdfTotal,
+      );
+
+    const accountBookingRecord =
+      GmailAgent.createAccountBookingRecord(
+        firstMessage.id!,
+        from,
+        subject,
+        date,
+        attachments,
+        remittancePaymentDate,
+        remittancePdfTotal,
+        accountBookingReference,
       );
 
     console.log("From:", from);
@@ -228,8 +247,11 @@ export class GmailAgent {
       "Remittance record:",
       remittanceRecord,
     );
+    console.log(
+      "Account Booking record:",
+      accountBookingRecord,
+    );
     console.log("Email preview:", snippet);
-
     console.log(
       "Email parts:",
       emailParts.map((part) => ({
@@ -239,9 +261,7 @@ export class GmailAgent {
           part.body?.attachmentId ?? null,
       })),
     );
-
     console.log("Attachments:", attachments);
-
     console.log(
       "Downloaded attachment size:",
       attachmentByteLength,
@@ -256,6 +276,15 @@ export class GmailAgent {
     const isXeroSender = from.includes(
       EMAIL_SENDERS.XERO,
     );
+
+    if (
+      isXeroSender &&
+      subject.startsWith(
+        EMAIL_SUBJECT_PREFIXES.ACCOUNT_BOOKING,
+      )
+    ) {
+      return "ACCOUNT_BOOKING";
+    }
 
     if (
       isXeroSender &&
@@ -318,15 +347,15 @@ export class GmailAgent {
   }
 
   static createRemittanceRecord(
-      messageId: string,
-      from: string,
-      subject: string,
-      receivedDate: string,
-      attachments: EmailAttachmentMetadata[],
-      paymentLines: RemittancePaymentLine[],
-      paymentDate: string | null = null,
-      pdfTotal: number | null = null,
-    ): RemittanceEmailRecord | null {
+    messageId: string,
+    from: string,
+    subject: string,
+    receivedDate: string,
+    attachments: EmailAttachmentMetadata[],
+    paymentLines: RemittancePaymentLine[],
+    paymentDate: string | null = null,
+    pdfTotal: number | null = null,
+  ): RemittanceEmailRecord | null {
     const classification = GmailAgent.classifyEmail(
       from,
       subject,
@@ -382,6 +411,65 @@ export class GmailAgent {
           ? "VALID"
           : "REVIEW_REQUIRED",
     };
+  }
+
+  static createAccountBookingRecord(
+    messageId: string,
+    from: string,
+    subject: string,
+    receivedDate: string,
+    attachments: EmailAttachmentMetadata[],
+    paymentDate: string | null = null,
+    pdfTotal: number | null = null,
+    bookingReference: string | null = null,
+  ): AccountBookingEmailRecord | null {
+    const classification = GmailAgent.classifyEmail(
+      from,
+      subject,
+    );
+
+    if (classification !== "ACCOUNT_BOOKING") {
+      return null;
+    }
+
+    return {
+      messageId,
+      classification,
+      subject,
+      receivedDate,
+      paymentDate,
+      pdfTotal,
+      bookingReference,
+      subjectTotalMatchesPdfTotal:
+        GmailAgent.doesSubjectTotalMatchPdfTotal(
+          GmailAgent.extractPaymentAmount(subject),
+          pdfTotal,
+        ),
+      validationStatus:
+        GmailAgent.doesSubjectTotalMatchPdfTotal(
+          GmailAgent.extractPaymentAmount(subject),
+          pdfTotal,
+        )
+          ? "VALID"
+          : "REVIEW_REQUIRED",
+      senderName:
+        GmailAgent.extractSenderName(from),
+      senderEmail:
+        GmailAgent.extractSenderEmail(from),
+      paymentAmount:
+        GmailAgent.extractPaymentAmount(subject),
+      attachments,
+    };
+  }
+
+  static extractAccountBookingReference(
+    pdfText: string,
+  ): string | null {
+    const match = pdfText.match(
+      /^[ \t]*\d{1,2}\s+[A-Za-z]{3}\s+\d{4}\s+(\d{7})\s+[\d,]+\.\d{2}\s+[\d,]+\.\d{2}\s+[\d,]+\.\d{2}[ \t]*$/m,
+    );
+
+    return match?.[1] ?? null;
   }
 
   static extractAttachmentMetadata(
@@ -533,6 +621,4 @@ export class GmailAgent {
       )
     );
   }
-
-  
 }
