@@ -106,7 +106,7 @@ export class GmailAgent {
         const downloadPath = path.join(
           process.cwd(),
           "agents",
-          "finance",
+          "001-finance",
           "downloads",
           safeFilename,
         );

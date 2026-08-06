@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "authorise": "tsx agents/finance/authorise.ts",
-    "finance": "tsx agents/finance/run.ts"
+    "authorise": "tsx agents/001-finance/authorise.ts",
+    "finance": "tsx agents/001-finance/run.ts"
   },
   "dependencies": {
     "framer-motion": "^12.40.0",

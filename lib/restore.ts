@@ -1,5 +1,5 @@
-import { findMissingReports } from "../agents/finance/comparer";
-import type { RestorableReport } from "../agents/finance/parser";
+import { findMissingReports } from "../agents/001-finance/comparer";
+import type { RestorableReport } from "../agents/001-finance/parser";
 
 type LocalReportReference = {
   id: string;
