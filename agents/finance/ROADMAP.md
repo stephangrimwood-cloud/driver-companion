@@ -55,7 +55,7 @@
 
 ---
 
-## Phase 4 – Email Classification
+## Phase 4 – Email Classification 🚧 Current
 
 - [ ] Classify remittance emails.
 - [ ] Classify account booking emails.

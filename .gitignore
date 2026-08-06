@@ -42,3 +42,6 @@ next-env.d.ts
 
 # Secrets
 secrets/
+
+# Finance Agent downloaded email attachments
+/agents/finance/downloads/
