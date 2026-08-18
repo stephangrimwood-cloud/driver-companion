@@ -19,11 +19,11 @@ export default function SplashScreen() {
       />
 
       {/* App Title */}
-      <h1
-        className="mb-4 translate-x-[2px] text-4xl font-semibold tracking-[0.22em] text-amber-400 uppercase"
-      >
-        Driver
-      </h1>
+        <h1
+          className="mb-4 translate-x-[2px] text-4xl font-semibold tracking-[0.22em] text-amber-400 uppercase"
+        >
+          Shift
+        </h1>
 
         {/* Logo Wrapper */}
         <div className="relative w-40 h-40">
@@ -71,7 +71,7 @@ export default function SplashScreen() {
       <h2
         className="mt-4 translate-x-[2px] text-xl tracking-[0.28em] text-white/80 uppercase"
       >
-        Companion
+        Mate
       </h2>
     </div>
   );

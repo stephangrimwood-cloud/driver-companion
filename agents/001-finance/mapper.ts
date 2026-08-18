@@ -1,4 +1,4 @@
-export type DriverCompanionReport = {
+export type ShiftMateReport = {
   shiftDate: string;
   cashTaken?: string;
   accountBookings?: string;
@@ -19,7 +19,7 @@ function formatDateForSheet(shiftDate: string): string {
 }
 
 export function mapReportToSheetRow(
-  report: DriverCompanionReport,
+  report: ShiftMateReport,
 ): (string | number)[] {
 
   const cashTaken = parseAmount(report.cashTaken);
@@ -46,7 +46,7 @@ export function mapReportToSheetRow(
 }
 
 export function mapReportsToSheetRow(
-  reports: DriverCompanionReport[],
+  reports: ShiftMateReport[],
 ): (string | number)[] {
   if (reports.length === 0) {
     throw new Error("At least one report is required.");

@@ -11,11 +11,11 @@ export default function DriverHubPage() {
 
         {/* Title */}
         <h1 className="mt-10 text-3xl font-semibold tracking-[0.22em] text-amber-400 uppercase">
-          Driver
+          Shift
         </h1>
 
         <h2 className="mb-12 mt-2 text-lg tracking-[0.28em] text-white/80 uppercase">
-          Companion
+          Mate
         </h2>
 
         {/* Navigation Cards */}
