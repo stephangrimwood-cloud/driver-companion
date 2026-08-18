@@ -266,10 +266,35 @@ export default function ReportsPage() {
     setNoteText("");
   }
 
-  function deleteReport(reportId: string) {
-    const updatedReports = reports.filter((report) => report.id !== reportId);
+  async function deleteReport(reportId: string) {
+  try {
+    const response = await fetch("/api/finance/backup", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        reportId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Unable to delete cloud backup.");
+    }
+
+    const updatedReports = reports.filter(
+      (report) => report.id !== reportId,
+    );
+
     updateReports(updatedReports);
+  } catch (error) {
+    console.error("Unable to delete report:", error);
+
+    alert(
+      "Unable to delete the report from cloud backup. The report has not been removed.",
+    );
   }
+}
 
   async function exportToGoogleSheets(report: Report) {
     setExportingReportId(report.id);

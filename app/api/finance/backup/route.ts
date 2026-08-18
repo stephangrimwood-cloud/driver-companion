@@ -70,3 +70,48 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { reportId } = await request.json();
+
+    if (!reportId || typeof reportId !== "string") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Report ID is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const sheets = new SheetsAgent();
+
+    await sheets.deleteReportBackup(reportId);
+
+    return NextResponse.json({
+      success: true,
+      message: "Driver Companion cloud backup deleted.",
+    });
+  } catch (error) {
+    console.error(
+      "Unable to delete Driver Companion backup:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to delete cloud backup.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}

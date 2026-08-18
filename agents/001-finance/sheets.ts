@@ -99,6 +99,42 @@ export class SheetsAgent {
     );
   }
 
+  async deleteReportBackup(
+    reportId: string,
+  ): Promise<void> {
+    const backupSheetName = "Driver Companion Backup";
+
+    const existingRows =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${backupSheetName}'!A:E`,
+      });
+
+    const rows = existingRows.data.values ?? [];
+
+    const existingRowIndex = rows.findIndex(
+      (row) => row[0] === reportId,
+    );
+
+    if (existingRowIndex < 0) {
+      console.log(
+        `No cloud backup found for report ${reportId}.`,
+      );
+      return;
+    }
+
+    const targetRow = existingRowIndex + 1;
+
+    await this.client.spreadsheets.values.clear({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: `'${backupSheetName}'!A${targetRow}:E${targetRow}`,
+    });
+
+    console.log(
+      `✓ Driver Companion backup deleted from row ${targetRow}.`,
+    );
+  }
+
   async readReportBackups(): Promise<string[]> {
     const backupSheetName = "Driver Companion Backup";
 
