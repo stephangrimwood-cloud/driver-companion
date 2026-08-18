@@ -300,13 +300,25 @@ export default function ReportsPage() {
     setExportingReportId(report.id);
 
     try {
-      const response = await fetch("/api/finance/export/google-sheets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const reportDate = getReportDateKey(report);
+
+      const sameDayReports = reports.filter(
+        (existingReport) =>
+          getReportDateKey(existingReport) === reportDate,
+      );
+
+      const response = await fetch(
+        "/api/finance/export/google-sheets",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reports: sameDayReports,
+          }),
         },
-        body: JSON.stringify(report),
-      });
+      );
 
       const result = await response.json();
 
@@ -314,23 +326,24 @@ export default function ReportsPage() {
         throw new Error(result.message ?? "Export failed.");
       }
 
+      const exportedAt = new Date().toISOString();
+
       setExportResults((current) => ({
         ...current,
         [report.id]: "success",
       }));
 
       const updatedReports = reports.map((existingReport) =>
-        existingReport.id === report.id
+        getReportDateKey(existingReport) === reportDate
           ? {
               ...existingReport,
               exportedToGoogleSheets: true,
-              exportedAt: new Date().toISOString(),
+              exportedAt,
             }
           : existingReport,
       );
 
       updateReports(updatedReports);
-
     } catch (error) {
       console.error("Unable to export report:", error);
 

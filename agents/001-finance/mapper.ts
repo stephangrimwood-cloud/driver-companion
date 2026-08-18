@@ -21,17 +21,12 @@ function formatDateForSheet(shiftDate: string): string {
 export function mapReportToSheetRow(
   report: DriverCompanionReport,
 ): (string | number)[] {
-  if (report.payable > 0) {
-    throw new Error(
-      "This report shows money payable to Cairns Taxis and cannot be exported as income.",
-    );
-  }
 
   const cashTaken = parseAmount(report.cashTaken);
   const areaCharge = parseAmount(report.areaCharge);
   const cashIncome = cashTaken - areaCharge;
 
-  const settlement = Math.abs(report.payable);
+  const settlement = -report.payable;
   const accountPayment = parseAmount(report.accountBookings);
 
   const totalIncome =
@@ -46,6 +41,58 @@ export function mapReportToSheetRow(
     accountPayment,
     totalIncome,
     "CTL Export",
+    "Pending",
+  ];
+}
+
+export function mapReportsToSheetRow(
+  reports: DriverCompanionReport[],
+): (string | number)[] {
+  if (reports.length === 0) {
+    throw new Error("At least one report is required.");
+  }
+
+  const shiftDate = reports[0].shiftDate;
+
+  if (reports.some((report) => report.shiftDate !== shiftDate)) {
+    throw new Error(
+      "All reports must belong to the same shift date.",
+    );
+  }
+
+  const cashIncome = reports.reduce(
+    (total, report) =>
+      total +
+      parseAmount(report.cashTaken) -
+      parseAmount(report.areaCharge),
+    0,
+  );
+
+  const settlement = reports.reduce(
+    (total, report) => total - report.payable,
+    0,
+  );
+
+  const accountPayment = reports.reduce(
+    (total, report) =>
+      total + parseAmount(report.accountBookings),
+    0,
+  );
+
+  const totalIncome =
+    cashIncome +
+    settlement +
+    accountPayment;
+
+  return [
+    formatDateForSheet(shiftDate),
+    cashIncome,
+    settlement,
+    accountPayment,
+    totalIncome,
+    reports.length > 1
+      ? `CTL Export • ${reports.length} shifts`
+      : "CTL Export",
     "Pending",
   ];
 }

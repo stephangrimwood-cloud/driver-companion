@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { mapReportToSheetRow } from "../../../../../agents/001-finance/mapper";
+import { mapReportsToSheetRow } from "../../../../../agents/001-finance/mapper";
 import { SheetsAgent } from "../../../../../agents/001-finance/sheets";
 import {
   getWorksheetName,
@@ -9,11 +9,21 @@ import {
 
 export async function POST(request: NextRequest) {
   try {
-    const report = await request.json();
+    const body = await request.json();
 
-    const row = mapReportToSheetRow(report);
-    const sheetName = getWorksheetName(report.shiftDate);
-    const rowNumber = getWorksheetRow(report.shiftDate);
+    const reports = Array.isArray(body.reports)
+      ? body.reports
+      : [body];
+
+    if (reports.length === 0) {
+      throw new Error("At least one report is required.");
+    }
+
+    const shiftDate = reports[0].shiftDate;
+
+    const row = mapReportsToSheetRow(reports);
+    const sheetName = getWorksheetName(shiftDate);
+    const rowNumber = getWorksheetRow(shiftDate);
 
     const sheets = new SheetsAgent();
 
