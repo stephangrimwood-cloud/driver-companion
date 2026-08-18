@@ -58,7 +58,7 @@ export class SheetsAgent {
     appVersion: string,
     reportJson: string,
   ): Promise<void> {
-    const backupSheetName = "Driver Companion Backup";
+    const backupSheetName = "Shift Mate Backup";
 
     const existingRows =
       await this.client.spreadsheets.values.get({
@@ -95,14 +95,14 @@ export class SheetsAgent {
     });
 
     console.log(
-      `✓ Driver Companion backup saved to row ${targetRow}.`,
+      `✓ Shift Mate backup saved to row ${targetRow}.`
     );
   }
 
   async deleteReportBackup(
     reportId: string,
   ): Promise<void> {
-    const backupSheetName = "Driver Companion Backup";
+    const backupSheetName = "Shift Mate Backup";
 
     const existingRows =
       await this.client.spreadsheets.values.get({
@@ -131,12 +131,12 @@ export class SheetsAgent {
     });
 
     console.log(
-      `✓ Driver Companion backup deleted from row ${targetRow}.`,
+      `✓ Shift Mate backup deleted from row ${targetRow}.`,
     );
   }
 
   async readReportBackups(): Promise<string[]> {
-    const backupSheetName = "Driver Companion Backup";
+    const backupSheetName = "Shift Mate Backup";
 
     const response =
       await this.client.spreadsheets.values.get({

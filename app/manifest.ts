@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Driver Companion",
-    short_name: "Driver Companion",
+    "name": "Shift Mate",
+    "short_name": "Shift Mate",
     description: "Taxi shift settlement and earnings companion",
     start_url: "/",
     display: "standalone",

@@ -1,4 +1,4 @@
-# Driver Companion App
+# Shift Mate App
 
 ## Project Charter
 
@@ -30,7 +30,7 @@ To create a professional companion application that assists taxi drivers by redu
 
 ## Long-term Vision
 
-Driver Companion should become a modular platform made up of specialised assistants that help taxi drivers throughout their working day.
+Shift Mate should become a modular platform made up of specialised assistants that help taxi drivers throughout their working day.
 
 Examples include:
 

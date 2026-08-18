@@ -8,13 +8,13 @@ If a future feature conflicts with these principles, the principles take precede
 
 ## Principle 1 — Preserve Original Data
 
-Driver Companion data is never silently or automatically rewritten by Agent 001.
+Shift Mate data is never silently or automatically rewritten by Agent 001.
 
-Agent 001 validates Driver Companion records against official Cairns Taxis financial documents and Taxi Business Records.
+Agent 001 validates Shift Mate records against official Cairns Taxis financial documents and Taxi Business Records.
 
 If differences are found:
 
-- The original Driver Companion values remain unchanged.
+- The original Shift Mate values remain unchanged.
 - The relevant record is marked as requiring review.
 - The discrepancy is recorded clearly.
 - Official references and amounts are preserved.
@@ -32,11 +32,11 @@ Each value has an authoritative source.
 
 Examples:
 
-- Driver Companion → Shift and driver-entered operational data.
+- Shift Mate → Shift and driver-entered operational data.
 - Gmail / Xero → Official remittances, Account Booking payments and invoices.
 - Taxi Business Records → Accounting ledger and audit trail.
-- Driver Companion Backup → Independent recovery copy of complete reports.
-- Local browser storage → Current working copy used by Driver Companion.
+- Shift Mate Backup → Independent recovery copy of complete reports.
+- Local browser storage → Current working copy used by Shift Mate.
 
 Agent 001 must not invent, replace or duplicate authoritative data unnecessarily.
 
@@ -121,7 +121,7 @@ They are documented so recurring patterns can be investigated.
 
 A review record should preserve enough information to explain:
 
-- What Driver Companion recorded.
+- What Shift Mate recorded.
 - What the official document recorded.
 - Which values differ.
 - The amount of the difference.
@@ -131,7 +131,7 @@ A review record should preserve enough information to explain:
 
 Repeated discrepancies may reveal:
 
-- Driver Companion calculation issues.
+- Shift Mate calculation issues.
 - Cairns Taxis processing differences.
 - Business-rule changes.
 - Incorrect source data.
@@ -142,7 +142,7 @@ Repeated discrepancies may reveal:
 
 ## Principle 7 — Respect the Cairns Taxis Settlement Process
 
-Driver Companion follows the official Cairns Taxis settlement-envelope process.
+Shift Mate follows the official Cairns Taxis settlement-envelope process.
 
 Settlement values have meaning.
 
@@ -158,17 +158,17 @@ The driver owes Cairns Taxis.
 
 This is not treated as income. It belongs to a separate expenses, reimbursements or accounts-payable workflow.
 
-The original Driver Companion report is never modified.
+The original Shift Mate report is never modified.
 
-The mapper translates Driver Companion values into the format required by Taxi Business Records. It must not alter the underlying financial record.
+The mapper translates Shift Mate values into the format required by Taxi Business Records. It must not alter the underlying financial record.
 
 ---
 
 ## Principle 8 — Separate Working Data, Accounting Data and Backup Data
 
-Driver Companion, Taxi Business Records and cloud backup have different responsibilities.
+Shift Mate, Taxi Business Records and cloud backup have different responsibilities.
 
-### Driver Companion
+### Shift Mate
 
 Records the driver's shift information and remains the working source for local reports.
 
@@ -176,7 +176,7 @@ Records the driver's shift information and remains the working source for local 
 
 Preserves accounting entries and reconciliation outcomes.
 
-### Driver Companion Backup
+### Shift Mate Backup
 
 Stores complete report JSON independently of the monthly ledger.
 
@@ -216,7 +216,7 @@ The same report, email, payment or official document must not be applied more th
 
 Duplicate protection should use the strongest available identifiers, including:
 
-- Driver Companion Report ID.
+- Shift Mate Report ID.
 - Gmail message ID.
 - Remittance reference.
 - Account Booking reference.
@@ -275,7 +275,7 @@ Examples:
 - `GmailAgent` → Search, read and classify Gmail financial messages.
 - Document extractors → Parse one specific financial field.
 - Record builders → Produce structured validated financial records.
-- Mapper → Convert Driver Companion data into worksheet-ready values.
+- Mapper → Convert Shift Mate data into worksheet-ready values.
 - Worksheet resolver → Determine the correct monthly sheet and row.
 - `SheetsAgent` → Communicate with Google Sheets.
 - Parser → Validate and convert backup JSON.
@@ -372,7 +372,7 @@ A feature is not fully complete until its documentation is updated.
 
 # Engineering Standard
 
-Driver Companion records reality.
+Shift Mate records reality.
 
 Agent 001 verifies reality.
 

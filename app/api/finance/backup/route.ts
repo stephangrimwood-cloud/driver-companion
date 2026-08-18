@@ -18,7 +18,7 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error("Unable to read Driver Companion backups:", error);
+    console.error("Unable to read Shift Mate backups:", error);
 
     return NextResponse.json(
       {
@@ -26,7 +26,7 @@ export async function GET() {
         message:
           error instanceof Error
             ? error.message
-            : "Unable to read Driver Companion backups.",
+            : "Unable to read Shift Mate backups.",
       },
       {
         status: 500,
@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Driver Companion report backed up.",
+      message: "Shift Mate report backed up.",
     });
   } catch (error) {
-    console.error("Unable to back up Driver Companion report:", error);
+    console.error("Unable to back up Shift Mate report:", error);
 
     return NextResponse.json(
       {
@@ -93,11 +93,11 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Driver Companion cloud backup deleted.",
+      message: "Shift Mate cloud backup deleted.",
     });
   } catch (error) {
     console.error(
-      "Unable to delete Driver Companion backup:",
+      "Unable to delete Shift Mate backup:",
       error,
     );
 

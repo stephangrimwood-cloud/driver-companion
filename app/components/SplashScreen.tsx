@@ -45,7 +45,7 @@ export default function SplashScreen() {
         {/* Main Logo */}
         <img
             src="/icon-512.png"
-            alt="Driver Companion Logo"
+            alt="Shift Mate Logo"
             className="relative z-20 w-40 h-40 object-contain"
         />
 

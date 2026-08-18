@@ -71,18 +71,18 @@
 
 ---
 
-## Phase 5 – Driver Companion Integration ✅ Complete
+## Phase 5 – Shift Mate Integration ✅ Complete
 
 ### Export ✅ Complete
 
-- [x] Create Driver Companion export API endpoint.
-- [x] Send complete Driver Companion reports to the API.
+- [x] Create Shift Mate export API endpoint.
+- [x] Send complete Shift Mate reports to the API.
 - [x] Create report mapper.
 - [x] Create worksheet resolver.
 - [x] Determine the correct monthly worksheet.
 - [x] Determine the correct daily row.
-- [x] Export Driver Companion reports to Google Sheets.
-- [x] Preserve the original Driver Companion values.
+- [x] Export Shift Mate reports to Google Sheets.
+- [x] Preserve the original Shift Mate values.
 - [x] Convert CTL payments into positive Settlement income values.
 - [x] Prevent duplicate rows by updating the fixed date row.
 - [x] Add `CTL Export` to Notes.
@@ -93,7 +93,7 @@
 
 ### Automatic Backup ✅ Complete
 
-- [x] Create the hidden `Driver Companion Backup` worksheet.
+- [x] Create the hidden `Shift Mate Backup` worksheet.
 - [x] Store Report ID.
 - [x] Store Shift Date.
 - [x] Store backup timestamp.
@@ -123,9 +123,9 @@
 
 ### Cloud Recovery Foundation ✅ Complete
 
-- [x] Create an API endpoint to read Driver Companion backups.
+- [x] Create an API endpoint to read Shift Mate backups.
 - [x] Read all backed-up report JSON from Google Sheets.
-- [x] Parse backup JSON into Driver Companion report objects.
+- [x] Parse backup JSON into Shift Mate report objects.
 - [x] Validate restored report data before recovery.
 - [x] Safely skip malformed or incomplete backup records.
 - [x] Compare cloud backups with local reports using Report ID.
@@ -164,7 +164,7 @@
 - [x] Confirm restored reports persist after a browser refresh.
 - [x] Confirm production restoration on a desktop browser.
 - [x] Confirm production restoration on a mobile device.
-- [x] Reinstall Driver Companion as a production PWA.
+- [x] Reinstall Shift Mate as a production PWA.
 - [x] Confirm restored reports persist inside the installed PWA.
 - [x] Confirm report backup works over the mobile network.
 - [x] Confirm monthly ledger export works over the mobile network.
@@ -246,19 +246,19 @@
 - [ ] Read verified Remittance records.
 - [ ] Read verified Account Booking records.
 - [ ] Read verified Invoice records.
-- [ ] Match official records with Driver Companion reports.
+- [ ] Match official records with Shift Mate reports.
 - [ ] Match official records with monthly ledger rows.
 - [ ] Match records using dates, amounts and reference numbers.
 - [ ] Prevent the same official document from being reconciled more than once.
 
 ### Standard Remittances
 
-- [ ] Compare Driver Companion Settlement with the official CTL remittance.
+- [ ] Compare Shift Mate Settlement with the official CTL remittance.
 - [ ] Compare official payment totals with the monthly ledger.
 - [ ] Record the official remittance reference.
 - [ ] Change Status to `Paid` when values match.
 - [ ] Change Status to `Review` when values differ.
-- [ ] Preserve the original Driver Companion financial values.
+- [ ] Preserve the original Shift Mate financial values.
 - [ ] Add official values and differences to Notes when required.
 
 ### Account Bookings
@@ -337,10 +337,10 @@
 
 ## Milestone 007 – Automatic Report Backup ✅ Complete
 
-Driver Companion automatically stores every saved report in two independent locations:
+Shift Mate automatically stores every saved report in two independent locations:
 
 - Local browser storage.
-- The hidden `Driver Companion Backup` worksheet.
+- The hidden `Shift Mate Backup` worksheet.
 
 The backup preserves the complete report JSON and is independent of the monthly business-record export.
 
@@ -348,7 +348,7 @@ The backup preserves the complete report JSON and is independent of the monthly 
 
 ## Milestone 008 – Backup and Sync Status ✅ Complete
 
-Driver Companion displays separate persistent states for:
+Shift Mate displays separate persistent states for:
 
 - Local report saved.
 - Cloud backup successful or failed.
@@ -358,7 +358,7 @@ Driver Companion displays separate persistent states for:
 
 ## Milestone 009 – Backup Recovery ✅ Complete
 
-Driver Companion can compare cloud backups with local reports and safely restore only reports missing from the device.
+Shift Mate can compare cloud backups with local reports and safely restore only reports missing from the device.
 
 Recovery has been verified in:
 
@@ -390,13 +390,13 @@ All 74 automated tests pass.
 
 Finance Agent will connect verified Gmail financial records with:
 
-- Driver Companion reports.
+- Shift Mate reports.
 - Pending Taxi Business Records rows.
 - Official payment references.
 - Account Booking references.
 - Cairns Taxis invoices.
 
-The first objective is to establish reliable matching using dates, amounts and reference numbers without altering original Driver Companion values.
+The first objective is to establish reliable matching using dates, amounts and reference numbers without altering original Shift Mate values.
 
 ---
 

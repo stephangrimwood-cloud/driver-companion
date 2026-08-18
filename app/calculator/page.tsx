@@ -31,7 +31,8 @@ type ShiftReport = {
   backupError?: string;
 };
 
-const REPORTS_STORAGE_KEY = "driver-companion-reports";
+const REPORTS_STORAGE_KEY = "shift-mate-reports";
+const LEGACY_REPORTS_STORAGE_KEY = "driver-companion-reports";
 const SHIFT_LEVY = "5.50";
 
 function getLocalDateKey() {
@@ -49,7 +50,9 @@ function toNumber(value: string) {
 
 function loadReports(): ShiftReport[] {
   try {
-    const storedReports = localStorage.getItem(REPORTS_STORAGE_KEY);
+    const storedReports =
+      localStorage.getItem(REPORTS_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_REPORTS_STORAGE_KEY);
 
     if (!storedReports) {
       return [];
@@ -57,7 +60,18 @@ function loadReports(): ShiftReport[] {
 
     const parsedReports = JSON.parse(storedReports);
 
-    return Array.isArray(parsedReports) ? parsedReports : [];
+    if (!Array.isArray(parsedReports)) {
+      return [];
+    }
+
+    if (!localStorage.getItem(REPORTS_STORAGE_KEY)) {
+      localStorage.setItem(
+        REPORTS_STORAGE_KEY,
+        JSON.stringify(parsedReports),
+      );
+    }
+
+    return parsedReports;
   } catch {
     return [];
   }

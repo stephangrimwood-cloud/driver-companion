@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Driver Companion",
-  description: "Taxi driver companion app",
+  title: "Shift Mate",
+  description: "Taxi shift companion",
   manifest: "/manifest.webmanifest",
 };
 

@@ -27,7 +27,7 @@ const validReport = {
 };
 
 describe("Report backup parser", () => {
-  it("parses valid Driver Companion backups", () => {
+  it("parses valid Shift Mate backups", () => {
     const reports = parseReportBackups([
       JSON.stringify(validReport),
     ]);

@@ -9,7 +9,8 @@ import {
   type CloudBackupSummary,
 } from "@/lib/restore";
 
-const REPORTS_STORAGE_KEY = "driver-companion-reports";
+const REPORTS_STORAGE_KEY = "shift-mate-reports";
+const LEGACY_REPORTS_STORAGE_KEY = "driver-companion-reports";
 
 const WEEK_DAYS = [
   "Monday",
@@ -152,12 +153,28 @@ function calculateShiftDuration(start?: string, end?: string) {
 
 function loadReports(): Report[] {
   try {
-    const storedValue = localStorage.getItem(REPORTS_STORAGE_KEY);
+    const storedValue =
+      localStorage.getItem(REPORTS_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_REPORTS_STORAGE_KEY);
 
     if (!storedValue) return [];
 
     const parsedValue: unknown = JSON.parse(storedValue);
-    return Array.isArray(parsedValue) ? (parsedValue as Report[]) : [];
+
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    const reports = parsedValue as Report[];
+
+    if (!localStorage.getItem(REPORTS_STORAGE_KEY)) {
+      localStorage.setItem(
+        REPORTS_STORAGE_KEY,
+        JSON.stringify(reports),
+      );
+    }
+
+    return reports;
   } catch (error) {
     console.error("Unable to load saved shift reports:", error);
     return [];

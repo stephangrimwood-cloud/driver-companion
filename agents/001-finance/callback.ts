@@ -18,7 +18,7 @@ export function waitForAuthorisationCode(): Promise<string> {
       });
 
       response.end(`
-        <h2>Driver Companion</h2>
+        <h2>Shift Mate</h2>
         <p>Authentication successful.</p>
         <p>You may now close this window.</p>
       `);

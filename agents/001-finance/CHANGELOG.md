@@ -94,7 +94,7 @@ agents/001-finance
 ```text
 shift-income-report-calculator
 ↓
-driver-companion
+Shift Mate
 ```
 
 - Updated the local Git remote to:
@@ -226,7 +226,7 @@ Validation
   └── REVIEW_REQUIRED
 ```
 
-This milestone establishes the verified financial-document foundation required for reconciliation with Driver Companion and Taxi Business Records.
+This milestone establishes the verified financial-document foundation required for reconciliation with Shift Mate and Taxi Business Records.
 
 ---
 
@@ -281,7 +281,7 @@ This milestone establishes the verified financial-document foundation required f
 
 ### **Milestone 009 — Safe Cloud Report Restoration** ✅
 
-Driver Companion can now recover missing reports from its Google Sheets backup and safely return them to the current device.
+Shift Mate can now recover missing reports from its Google Sheets backup and safely return them to the current device.
 
 The completed restoration pipeline is:
 
@@ -338,7 +338,7 @@ Device after restore: 4
 Missing after restore: 0
 ```
 
-This milestone establishes a working disaster-recovery process for Driver Companion reports while protecting the integrity of existing local data.
+This milestone establishes a working disaster-recovery process for Shift Mate reports while protecting the integrity of existing local data.
 
 ---
 
@@ -384,7 +384,7 @@ This milestone establishes a working disaster-recovery process for Driver Compan
 
 ## Engineering
 
-- Introduced `parser.ts` to safely convert backup JSON into Driver Companion report objects.
+- Introduced `parser.ts` to safely convert backup JSON into Shift Mate report objects.
 - Introduced `comparer.ts` to compare local reports against cloud backups.
 - Introduced `restore.ts` to isolate recovery logic from the Reports page.
 - Reduced coupling between the user interface and Finance Agent.
@@ -397,7 +397,7 @@ This milestone establishes a working disaster-recovery process for Driver Compan
 
 ### **Milestone 008 — Cloud Recovery Foundation** ✅
 
-Driver Companion can now safely inspect cloud backups without modifying local data.
+Shift Mate can now safely inspect cloud backups without modifying local data.
 
 Recovery now follows a dedicated pipeline:
 
@@ -447,22 +447,22 @@ This milestone establishes the complete recovery foundation required for future 
 - `SheetsAgent`.
 - Workbook title verification.
 - Row-based worksheet writing.
-- Driver Companion export API endpoint.
-- Driver Companion report mapper.
+- Shift Mate export API endpoint.
+- Shift Mate report mapper.
 - Worksheet resolver.
 - Monthly worksheet row writer.
 - Automatic worksheet selection.
 - Initial worksheet status support (`Pending`).
 
-### Driver Companion Backup
+### Shift Mate Backup
 
-- Dedicated Driver Companion backup API endpoint.
-- Hidden **Driver Companion Backup** worksheet.
+- Dedicated Shift Mate backup API endpoint.
+- Hidden **Shift Mate Backup** worksheet.
 - Automatic report backup when **Save Report** is pressed.
 - Report ID tracking.
 - Backup timestamp storage.
 - Application version storage.
-- Complete Driver Companion JSON backup.
+- Complete Shift Mate JSON backup.
 - Update existing backups using Report ID.
 - Independent cloud backup workflow.
 
@@ -501,7 +501,7 @@ This milestone establishes the complete recovery foundation required for future 
 - Introduced dedicated Backup API endpoint.
 - Separated responsibilities between:
 
-  - Driver Companion
+  - Shift Mate
   - Backup API
   - Export API
   - Mapper
@@ -520,12 +520,12 @@ This milestone establishes the complete recovery foundation required for future 
 
 ### **Milestone 006 — First End-to-End Export** ✅
 
-Driver Companion successfully exports completed shift reports directly into the Taxi Business Records workbook.
+Shift Mate successfully exports completed shift reports directly into the Taxi Business Records workbook.
 
 Workflow:
 
 ```text
-Driver Companion
+Shift Mate
         │
         ▼
  Export API
@@ -547,12 +547,12 @@ Worksheet Resolver
 
 ### **Milestone 007 — Automatic Report Backup** ✅
 
-Driver Companion now automatically protects every saved report.
+Shift Mate now automatically protects every saved report.
 
 Every report is stored in two independent locations:
 
 - Local browser storage.
-- Hidden **Driver Companion Backup** worksheet.
+- Hidden **Shift Mate Backup** worksheet.
 
 The complete report JSON is preserved, allowing future restoration without relying on browser storage.
 
@@ -589,7 +589,7 @@ Business record exports are now independent of backups, providing a clear separa
 
 - Cairns Taxis remittance notifications are delivered via Xero.
 - Remittance emails include useful metadata within the subject line.
-- Xero remittance documents include a unique payment reference suitable for future reconciliation with Driver Companion and Taxi Business Records.
+- Xero remittance documents include a unique payment reference suitable for future reconciliation with Shift Mate and Taxi Business Records.
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Agent 001 reconciles Driver Companion with official Cairns Taxis financial records.
+Agent 001 reconciles Shift Mate with official Cairns Taxis financial records.
 
 It compares data recorded by the driver against official financial documents received by email and helps ensure the Taxi Business Records workbook remains accurate.
 
@@ -27,7 +27,7 @@ It compares data recorded by the driver against official financial documents rec
 - Download and read PDF attachments.
 - Extract financial information.
 - Validate document totals.
-- Read Driver Companion data.
+- Read Shift Mate data.
 - Compare against Taxi Business Records.
 - Flag discrepancies for review.
 - Update records where appropriate.
@@ -122,13 +122,13 @@ It compares data recorded by the driver against official financial documents rec
 
 ---
 
-## Phase 5 – Driver Companion Integration 🚧 Current Milestone
+## Phase 5 – Shift Mate Integration 🚧 Current Milestone
 
 - [x] Connect to Google Sheets.
 - [x] Confirm access to Taxi Business Records.
-- [ ] Read Driver Companion reports.
-- [ ] Match Finance Agent records with Driver Companion reports.
-- [ ] Export verified Driver Companion reports to Google Sheets.
+- [ ] Read Shift Mate reports.
+- [ ] Match Finance Agent records with Shift Mate reports.
+- [ ] Export verified Shift Mate reports to Google Sheets.
 - [ ] Record remittance reference numbers.
 - [ ] Record account booking reference numbers.
 - [ ] Record invoice information.
@@ -138,7 +138,7 @@ It compares data recorded by the driver against official financial documents rec
 
 ## Phase 6 – Reconciliation
 
-- [ ] Compare Gmail data with Driver Companion.
+- [ ] Compare Gmail data with Shift Mate.
 - [ ] Compare Gmail data with Taxi Business Records.
 - [ ] Match transactions using dates and reference numbers.
 - [ ] Flag missing transactions.

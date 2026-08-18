@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       message: `Report exported to ${sheetName}, row ${rowNumber}.`,
     });
   } catch (error) {
-    console.error("Unable to export Driver Companion report:", error);
+    console.error("Unable to export Shift Mate report:", error);
 
     return NextResponse.json(
       {

@@ -1,4 +1,4 @@
-# Driver Companion App
+# Shift Mate App
 
 # Development Standards
 
@@ -8,7 +8,7 @@ Version: 1.0
 
 ## Purpose
 
-This document defines the development standards used throughout the Driver Companion App project.
+This document defines the development standards used throughout the Shift Mate App project.
 
 Its purpose is to ensure the project remains organised, maintainable and scalable as new features and agents are added.
 

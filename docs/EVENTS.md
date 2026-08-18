@@ -1,4 +1,4 @@
-# Driver Companion - Events Feature
+# Shift Mate - Events Feature
 
 ## Purpose
 
@@ -15,7 +15,7 @@ The Events page is intended to provide useful operational awareness for drivers 
 Implemented features:
 
 * Events page added to Driver Hub
-* Consistent Driver Companion styling
+* Consistent Shift Mate styling
 * Home navigation button
 * Dynamic event rendering from data file
 * Separate `eventsData.ts` data source
