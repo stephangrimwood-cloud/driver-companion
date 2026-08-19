@@ -3,6 +3,8 @@ import {
   loadGoogleSheetsConfig,
 } from "./auth";
 
+import type { VerificationRecord } from "./types";
+
 export class SheetsAgent {
   private client = createGoogleSheetsClient();
   private config = loadGoogleSheetsConfig();
@@ -159,6 +161,83 @@ export class SheetsAgent {
     );
 
     return rows;
+  }
+
+  async readFinanceAgentLog(): Promise<string[][]> {
+    const response =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: "'Finance Agent Log'!A:Z",
+      });
+
+    const rows = response.data.values ?? [];
+
+    console.log(
+      "Finance Agent Log rows:",
+      rows,
+    );
+
+    return rows;
+  }
+
+  async writeVerificationRecord(
+    record: VerificationRecord,
+  ): Promise<void> {
+    await this.client.spreadsheets.values.append({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: "'Finance Agent Log'!A:D",
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        values: [[
+          record.ledgerDate,
+          record.method,
+          record.verifiedAt,
+          record.source,
+        ]],
+      },
+    });
+
+    console.log(
+      `✓ Verification logged: ${record.ledgerDate} (${record.method})`,
+    );
+  }
+
+  async verifyLedgerRowManually(
+    sheetName: string,
+    rowNumber: number,
+    ledgerDate: string,
+    source: string,
+  ): Promise<void> {
+
+    const statusResponse =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${sheetName}'!G${rowNumber}`,
+      });
+
+    const currentStatus =
+      statusResponse.data.values?.[0]?.[0] ?? "";
+
+    if (currentStatus !== "Pending") {
+      console.log(
+        `Manual verification skipped: ${ledgerDate} is currently '${currentStatus}'.`,
+      );
+      return;
+    }
+
+    await this.updateLedgerStatus(
+      sheetName,
+      rowNumber,
+      "Verified",
+    );
+
+    await this.writeVerificationRecord({
+      ledgerDate,
+      method: "MANUAL",
+      verifiedAt: new Date().toISOString(),
+      source,
+    });
   }
 
   async updateLedgerStatus(

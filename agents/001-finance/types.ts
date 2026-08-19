@@ -90,3 +90,14 @@ export interface RemittancePaymentLine {
   amountPaid: number;
   stillOwing: number;
 }
+
+export type VerificationMethod =
+  | "AUTOMATIC"
+  | "MANUAL";
+
+  export interface VerificationRecord {
+  ledgerDate: string;
+  method: VerificationMethod;
+  verifiedAt: string;
+  source: string;
+}

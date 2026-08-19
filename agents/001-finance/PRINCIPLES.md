@@ -8,17 +8,19 @@ If a future feature conflicts with these principles, the principles take precede
 
 ## Principle 1 — Preserve Original Data
 
-Shift Mate data is never silently or automatically rewritten by Agent 001.
+Shift Mate financial values are never silently or automatically rewritten by Agent 001.
 
 Agent 001 validates Shift Mate records against official Cairns Taxis financial documents and Taxi Business Records.
 
 If differences are found:
 
 - The original Shift Mate values remain unchanged.
-- The relevant record is marked as requiring review.
+- The relevant record remains unverified or is marked as requiring review.
 - The discrepancy is recorded clearly.
 - Official references and amounts are preserved.
 - Any later correction must be explicit and traceable.
+
+Verification status may be updated when the required verification rules are satisfied, but the underlying financial values must remain unchanged.
 
 Agent 001 verifies data.
 
@@ -34,7 +36,7 @@ Examples:
 
 - Shift Mate → Shift and driver-entered operational data.
 - Gmail / Xero → Official remittances, Account Booking payments and invoices.
-- Taxi Business Records → Accounting ledger and audit trail.
+- Taxi Business Records → Accounting ledger, verification status and audit trail.
 - Shift Mate Backup → Independent recovery copy of complete reports.
 - Local browser storage → Current working copy used by Shift Mate.
 
@@ -48,10 +50,17 @@ When two authoritative sources disagree, the conflict is recorded and flagged fo
 
 If information cannot be verified, it is never assumed.
 
-Unknown, incomplete or conflicting values are marked:
+Document-level uncertainty is marked:
 
 ```text
 REVIEW_REQUIRED
+```
+
+Ledger-level uncertainty remains visible through the appropriate ledger status, such as:
+
+```text
+Pending
+Review Required
 ```
 
 Missing information must remain visibly missing until a reliable source supplies it.
@@ -65,18 +74,20 @@ Agent 001 must never fabricate:
 - Invoice numbers.
 - Payment status.
 - Reconciliation outcomes.
+- Verification evidence.
 
 ---
 
 ## Principle 4 — Validate Before Accepting
 
-A financial record is accepted only when its required information is present and its relevant totals agree.
+A financial document is accepted only when its required information is present and its relevant checks pass.
 
 Examples include:
 
 - Remittance email subject total.
 - Remittance PDF total.
 - Remittance payment-line total.
+- Remittance invoice date and reference consistency.
 - Account Booking email subject total.
 - Account Booking PDF total.
 - Invoice amount due.
@@ -84,7 +95,7 @@ Examples include:
 
 A successfully parsed document is not automatically a valid document.
 
-Records receive one of two validation states:
+Records receive one of two document-validation states:
 
 ### `VALID`
 
@@ -93,6 +104,10 @@ Required information was found and all relevant checks passed.
 ### `REVIEW_REQUIRED`
 
 Information is missing, incomplete, inconsistent or cannot be verified safely.
+
+A `VALID` document is eligible for reconciliation.
+
+It does not automatically mean that a ledger entry is `Verified`.
 
 ---
 
@@ -108,6 +123,7 @@ Agent 001 must not:
 - Treat an Account Booking payment as a standard remittance.
 - Treat a customer identifier as an invoice reference.
 - Apply one document parser indiscriminately to every financial email.
+- Apply CTL remittance verification rules to unrelated owner/operator payments.
 
 Shared helpers are acceptable only where the underlying meaning is genuinely the same.
 
@@ -174,7 +190,7 @@ Records the driver's shift information and remains the working source for local 
 
 ### Taxi Business Records
 
-Preserves accounting entries and reconciliation outcomes.
+Preserves accounting entries, verification status and reconciliation outcomes.
 
 ### Shift Mate Backup
 
@@ -212,7 +228,7 @@ Recovery must favour preservation over convenience.
 
 ## Principle 10 — Prevent Duplicate Processing
 
-The same report, email, payment or official document must not be applied more than once.
+The same report, email, payment, verification or official document must not be applied more than once.
 
 Duplicate protection should use the strongest available identifiers, including:
 
@@ -222,7 +238,10 @@ Duplicate protection should use the strongest available identifiers, including:
 - Account Booking reference.
 - Invoice number.
 - Invoice reference.
+- Ledger date and current verification status.
 - Shift date and amount where no stronger identifier is available.
+
+For ledger verification, an already `Verified` row must not be verified again merely because the same remittance is processed again.
 
 A duplicate must be ignored or flagged for review, never silently recorded again.
 
@@ -230,7 +249,7 @@ A duplicate must be ignored or flagged for review, never silently recorded again
 
 ## Principle 11 — Maintain an Audit Trail
 
-Important automated actions must be traceable.
+Important automated and manual actions must be traceable.
 
 The system should preserve:
 
@@ -241,11 +260,23 @@ The system should preserve:
 - Official reference numbers.
 - Validation results.
 - Reconciliation outcomes.
+- Verification method.
+- Verification timestamp.
+- Verification source.
 - Backup timestamps.
 - Export timestamps.
 - Errors and review decisions.
 
+Ledger verification must distinguish between:
+
+- `AUTOMATIC`
+- `MANUAL`
+
 The audit trail should explain what Agent 001 did without requiring access to its internal implementation.
+
+A ledger status of `Verified` describes the outcome.
+
+The audit trail describes how that outcome was reached.
 
 ---
 
@@ -272,12 +303,14 @@ Every component should have one clear responsibility.
 
 Examples:
 
-- `GmailAgent` → Search, read and classify Gmail financial messages.
+- `GmailAgent` → Search, read, classify and build structured Gmail financial records.
 - Document extractors → Parse one specific financial field.
 - Record builders → Produce structured validated financial records.
+- Remittance matcher → Compare validated remittance payment lines with ledger rows.
 - Mapper → Convert Shift Mate data into worksheet-ready values.
 - Worksheet resolver → Determine the correct monthly sheet and row.
-- `SheetsAgent` → Communicate with Google Sheets.
+- `SheetsAgent` → Read and write Google Sheets data.
+- Verification helpers → Apply protected automatic or manual verification actions.
 - Parser → Validate and convert backup JSON.
 - Comparer → Compare cloud and local reports.
 - Restore helper → Merge missing reports safely.
@@ -317,7 +350,7 @@ Prefer:
 - Visible business rules.
 - Straightforward control flow.
 - Document-specific types.
-- Clear validation states.
+- Clear validation and verification states.
 - Simple error handling.
 
 Avoid:
@@ -332,16 +365,18 @@ Avoid:
 
 ## Principle 16 — Fail Safely
 
-A failed email search, PDF parse, backup, export or reconciliation must not corrupt existing data.
+A failed email search, PDF parse, backup, export, reconciliation or verification must not corrupt existing data.
 
 Failure behaviour should:
 
-- Preserve the original record.
+- Preserve the original financial values.
 - Avoid partial updates where possible.
 - Return a clear error.
 - Store useful diagnostic information.
 - Mark the item for review when financial certainty is affected.
 - Allow the operation to be retried safely.
+
+Where one logical operation requires multiple external writes, the design must make incomplete operations detectable and recoverable.
 
 The system must never report success before the operation is actually complete.
 
@@ -362,11 +397,80 @@ Documentation must reflect:
 - Current milestone.
 - Completed work.
 - Validation rules.
+- Verification rules.
 - Known limitations.
 - Test status.
 - Important discoveries.
 
 A feature is not fully complete until its documentation is updated.
+
+---
+
+## Principle 18 — Separate Validation from Verification
+
+Document validation and ledger verification are different operations and must remain separate.
+
+### Document validation
+
+Answers:
+
+> Is this financial document internally complete and consistent enough to trust for reconciliation?
+
+Possible states include:
+
+- `VALID`
+- `REVIEW_REQUIRED`
+
+### Ledger verification
+
+Answers:
+
+> Has this accounting ledger entry been satisfactorily reconciled against reliable evidence?
+
+Possible ledger states include:
+
+- `Pending`
+- `Verified`
+- `Review Required`
+
+A document can be `VALID` without producing a `Verified` ledger entry.
+
+A ledger entry must not become `Verified` merely because a document parsed successfully.
+
+---
+
+## Principle 19 — Verification Must Be Explicit and Auditable
+
+Automatic verification is allowed only when the required rules are satisfied without ambiguity.
+
+For CTL remittance verification, this currently means:
+
+- The remittance record is `VALID`.
+- The corresponding ledger row can be identified.
+- The remittance reference is consistent with the relevant date.
+- The remittance amount exactly matches the ledger Settlement value.
+- The current ledger status is `Pending`.
+
+When those conditions are satisfied, Agent 001 may change:
+
+```text
+Pending → Verified
+```
+
+and must create an `AUTOMATIC` verification record.
+
+If any required condition is not satisfied, Agent 001 must make no automatic verification change.
+
+Manual verification:
+
+- Requires an explicit manual action.
+- Must use real supporting evidence.
+- Must not infer or manufacture that evidence.
+- Is permitted only when the target ledger row is still `Pending`.
+- Must create a `MANUAL` verification record.
+- Must preserve the verification source.
+
+Mixed CTL/operator payments and other ambiguous cases remain `Pending` until they have been genuinely investigated.
 
 ---
 

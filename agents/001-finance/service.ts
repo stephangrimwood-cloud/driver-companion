@@ -77,6 +77,13 @@ Proposed Action: ${
               match.rowNumber,
               "Verified",
             );
+
+            await this.sheets.writeVerificationRecord({
+              ledgerDate: match.ledgerDate,
+              method: "AUTOMATIC",
+              verifiedAt: new Date().toISOString(),
+              source: `CTL remittance ${remittanceRecord.messageId}`,
+            });
           } else {
             console.log("NO SHEET CHANGES MADE");
           }
@@ -103,5 +110,19 @@ NO SHEET CHANGES MADE
 `);
       }
     }
+  }
+
+  async verifyManually(
+    sheetName: string,
+    rowNumber: number,
+    ledgerDate: string,
+    source: string,
+  ): Promise<void> {
+    await this.sheets.verifyLedgerRowManually(
+      sheetName,
+      rowNumber,
+      ledgerDate,
+      source,
+    );
   }
 }
