@@ -25,14 +25,14 @@ export class GmailAgent {
 
   constructor(private config: FinanceAgentConfig) {}
 
-  initialise(): void {
+  initialise(): Promise<RemittanceEmailRecord[]> {
     console.log("Finance Agent: Gmail initialised.");
     console.log("Authenticated Gmail client created.");
 
-    void this.listRecentEmails();
+    return this.listRecentEmails();
   }
 
-  private async listRecentEmails(): Promise<void> {
+  private async listRecentEmails(): Promise<RemittanceEmailRecord[]> {
     console.log("Listing recent emails...");
 
     const gmail = google.gmail({
@@ -45,249 +45,79 @@ export class GmailAgent {
     const response = await gmail.users.messages.list({
       userId: "me",
       maxResults: 5,
-      q: GMAIL_SEARCH_QUERIES.INVOICES,
+      q: GMAIL_SEARCH_QUERIES.REMITTANCES,
     });
 
-    const firstMessage = response.data.messages?.[0];
+    const remittanceCandidateIds: string[] = [];
 
-    if (!firstMessage) {
-      console.log("No emails found.");
-      return;
-    }
+    for (const message of response.data.messages ?? []) {
+      if (!message.id) {
+        continue;
+      }
 
-    console.log("First message ID:", firstMessage.id);
+      const candidate = await gmail.users.messages.get({
+        userId: "me",
+        id: message.id,
+        format: "metadata",
+        metadataHeaders: [
+          "From",
+          "Subject",
+        ],
+      });
 
-    const email = await gmail.users.messages.get({
-      userId: "me",
-      id: firstMessage.id!,
-    });
+      const candidateHeaders =
+        candidate.data.payload?.headers ?? [];
 
-    const headers = email.data.payload?.headers ?? [];
-    const snippet =
-      email.data.snippet ?? "(No email preview)";
-    const emailParts = email.data.payload?.parts ?? [];
+      const candidateFrom =
+        candidateHeaders.find(
+          (header) => header.name === "From",
+        )?.value ?? "(Unknown Sender)";
 
-    const attachments =
-      GmailAgent.extractAttachmentMetadata(emailParts);
+      const candidateSubject =
+        candidateHeaders.find(
+          (header) => header.name === "Subject",
+        )?.value ?? "(No Subject)";
 
-    let attachmentByteLength: number | null = null;
-    let remittancePaymentLines: RemittancePaymentLine[] = [];
-    let remittancePaymentDate: string | null = null;
-    let remittancePdfTotal: number | null = null;
-    let accountBookingReference: string | null = null;
-    let invoicePdfText: string | null = null;
-
-    const firstAttachment = attachments[0];
-
-    if (firstAttachment) {
-      const attachmentResponse =
-        await gmail.users.messages.attachments.get({
-          userId: "me",
-          messageId: firstMessage.id!,
-          id: firstAttachment.attachmentId,
-        });
-
-      const encodedData = attachmentResponse.data.data;
-
-      if (encodedData) {
-        const attachmentBuffer = Buffer.from(
-          encodedData
-            .replace(/-/g, "+")
-            .replace(/_/g, "/"),
-          "base64",
+      const candidateClassification =
+        GmailAgent.classifyEmail(
+          candidateFrom,
+          candidateSubject,
         );
 
-        attachmentByteLength = attachmentBuffer.length;
+      console.log(
+        "PAYMENT CANDIDATE:",
+        message.id,
+        candidateClassification,
+        candidateSubject,
+      );
 
-        const safeFilename = path.basename(
-          firstAttachment.filename,
-        );
-
-        const downloadPath = path.join(
-          process.cwd(),
-          "agents",
-          "001-finance",
-          "downloads",
-          safeFilename,
-        );
-
-        await writeFile(downloadPath, attachmentBuffer);
-
-        console.log(
-          "Attachment saved to:",
-          downloadPath,
-        );
-
-        const pdfParser = new PDFParse({
-          data: attachmentBuffer,
-        });
-
-        try {
-          const pdfTextResult =
-            await pdfParser.getText();
-
-          console.log("PDF text:", pdfTextResult.text);
-
-          invoicePdfText = pdfTextResult.text;
-
-          remittancePaymentLines =
-            GmailAgent.extractRemittancePaymentLines(
-              pdfTextResult.text,
-            );
-
-          remittancePaymentDate =
-            GmailAgent.extractRemittancePaymentDate(
-              pdfTextResult.text,
-            );
-
-          remittancePdfTotal =
-            GmailAgent.extractRemittancePdfTotal(
-              pdfTextResult.text,
-            );
-
-          accountBookingReference =
-            GmailAgent.extractAccountBookingReference(
-              pdfTextResult.text,
-            );
-
-          console.log(
-            "Remittance payment lines:",
-            remittancePaymentLines,
-          );
-
-          const remittancePaymentTotal =
-            GmailAgent.calculateRemittancePaymentTotal(
-              remittancePaymentLines,
-            );
-
-          console.log(
-            "Remittance payment total:",
-            remittancePaymentTotal,
-          );
-        } finally {
-          await pdfParser.destroy();
-        }
+      if (candidateClassification === "REMITTANCE") {
+        remittanceCandidateIds.push(message.id);
       }
     }
 
-    const subject =
-      headers.find(
-        (header) => header.name === "Subject",
-      )?.value ?? "(No Subject)";
+    const extractedRemittanceRecords:
+      RemittanceEmailRecord[] = [];
 
-    const from =
-      headers.find(
-        (header) => header.name === "From",
-      )?.value ?? "(Unknown Sender)";
+    for (const messageId of remittanceCandidateIds) {
+      const remittanceRecord =
+        await this.processRemittanceMessage(
+          messageId,
+        );
 
-    const date =
-      headers.find(
-        (header) => header.name === "Date",
-      )?.value ?? "(Unknown Date)";
+      if (remittanceRecord) {
+        extractedRemittanceRecords.push(
+          remittanceRecord,
+        );
+      }
+    }
 
-    const classification = GmailAgent.classifyEmail(
-      from,
-      subject,
-    );
-
-    const paymentAmount =
-      GmailAgent.extractPaymentAmount(subject);
-
-    const paymentReference =
-      GmailAgent.extractPaymentReference(subject);
-
-    const senderEmail =
-      GmailAgent.extractSenderEmail(from);
-
-    const senderName =
-      GmailAgent.extractSenderName(from);
-
-    const remittanceTotalMatches =
-      GmailAgent.doesRemittanceTotalMatch(
-        paymentAmount,
-        remittancePaymentLines,
-      );
-
-    const remittanceRecord =
-      GmailAgent.createRemittanceRecord(
-        firstMessage.id!,
-        from,
-        subject,
-        date,
-        attachments,
-        remittancePaymentLines,
-        remittancePaymentDate,
-        remittancePdfTotal,
-      );
-
-    const accountBookingRecord =
-      GmailAgent.createAccountBookingRecord(
-        firstMessage.id!,
-        from,
-        subject,
-        date,
-        attachments,
-        remittancePaymentDate,
-        remittancePdfTotal,
-        accountBookingReference,
-      );
-
-      const invoiceRecord =
-        classification === "INVOICE" &&
-        invoicePdfText !== null
-          ? GmailAgent.createInvoiceRecord(
-              firstMessage.id!,
-              from,
-              subject,
-              date,
-              invoicePdfText,
-              attachments,
-            )
-          : null;
-
-    console.log("From:", from);
-    console.log("Subject:", subject);
-    console.log("Date:", date);
-    console.log("Classification:", classification);
-    console.log("Payment amount:", paymentAmount);
     console.log(
-      "Payment reference:",
-      paymentReference,
+      "EXTRACTED REMITTANCE RECORD COUNT:",
+      extractedRemittanceRecords.length,
     );
-    console.log("Sender email:", senderEmail);
-    console.log("Sender name:", senderName);
-    console.log(
-      "Remittance total matches:",
-      remittanceTotalMatches,
-    );
-    console.log(
-      "Remittance record:",
-      remittanceRecord,
-    );
-    console.log(
-      "Account Booking record:",
-      accountBookingRecord,
-    );
-    console.log(
-      "Invoice record:",
-      invoiceRecord,
-    );
-    console.log("Email preview:", snippet);
-    console.log(
-      "Email parts:",
-      emailParts.map((part) => ({
-        mimeType: part.mimeType,
-        filename: part.filename,
-        attachmentId:
-          part.body?.attachmentId ?? null,
-      })),
-    );
-    console.log("Attachments:", attachments);
-    console.log(
-      "Downloaded attachment size:",
-      attachmentByteLength,
-      "bytes",
-    );
+
+    return extractedRemittanceRecords;
   }
 
   static classifyEmail(
@@ -440,11 +270,16 @@ export class GmailAgent {
           GmailAgent.extractPaymentAmount(subject),
           pdfTotal,
           paymentLines,
+        ) &&
+        paymentLines.every((paymentLine) =>
+          GmailAgent.doesRemittanceReferenceMatchInvoiceDate(
+            paymentLine,
+          ),
         )
           ? "VALID"
           : "REVIEW_REQUIRED",
-    };
-  }
+          };
+        }
 
   static createAccountBookingRecord(
     messageId: string,
@@ -703,6 +538,46 @@ export class GmailAgent {
     return Number(match[1].replace(/,/g, ""));
   }
 
+  static doesRemittanceReferenceMatchInvoiceDate(
+    paymentLine: RemittancePaymentLine,
+  ): boolean {
+    const match = paymentLine.invoiceDate.match(
+      /^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})$/,
+    );
+
+    if (!match) {
+      return false;
+    }
+
+    const months: Record<string, string> = {
+      Jan: "01",
+      Feb: "02",
+      Mar: "03",
+      Apr: "04",
+      May: "05",
+      Jun: "06",
+      Jul: "07",
+      Aug: "08",
+      Sep: "09",
+      Oct: "10",
+      Nov: "11",
+      Dec: "12",
+    };
+
+    const month = months[match[2]];
+
+    if (!month) {
+      return false;
+    }
+
+    const day = match[1].padStart(2, "0");
+
+    const expectedReference =
+      `${day}${month}${match[3]}`;
+
+    return paymentLine.reference === expectedReference;
+  }
+
   static calculateRemittancePaymentTotal(
     paymentLines: RemittancePaymentLine[],
   ): number {
@@ -779,6 +654,146 @@ export class GmailAgent {
         paymentAmount,
         pdfTotal,
       )
+    );
+  }
+
+  private async processRemittanceMessage(
+    messageId: string,
+  ): Promise<RemittanceEmailRecord | null> {
+    const gmail = google.gmail({
+      version: "v1",
+      auth: this.client,
+    });
+
+    console.log(
+      "Processing remittance message:",
+      messageId,
+    );
+
+    const email = await gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+    });
+
+    const headers = email.data.payload?.headers ?? [];
+
+    const emailParts =
+      email.data.payload?.parts ?? [];
+
+    const attachments =
+      GmailAgent.extractAttachmentMetadata(
+        emailParts,
+      );
+
+      const subject =
+        headers.find(
+          (header) => header.name === "Subject",
+        )?.value ?? "(No Subject)";
+
+      const from =
+        headers.find(
+          (header) => header.name === "From",
+        )?.value ?? "(Unknown Sender)";
+
+      const date =
+        headers.find(
+          (header) => header.name === "Date",
+        )?.value ?? "(Unknown Date)";
+
+      let remittancePaymentLines: RemittancePaymentLine[] = [];
+      let remittancePaymentDate: string | null = null;
+      let remittancePdfTotal: number | null = null;
+
+      const firstAttachment = attachments[0];
+
+      if (firstAttachment) {
+        const attachmentResponse =
+          await gmail.users.messages.attachments.get({
+            userId: "me",
+            messageId,
+            id: firstAttachment.attachmentId,
+          });
+
+        const encodedData = attachmentResponse.data.data;
+
+        if (encodedData) {
+          const attachmentBuffer = Buffer.from(
+            encodedData
+              .replace(/-/g, "+")
+              .replace(/_/g, "/"),
+            "base64",
+          );
+
+          const safeFilename =
+            `${messageId}-${path.basename(
+              firstAttachment.filename,
+            )}`;
+
+          const downloadPath = path.join(
+            process.cwd(),
+            "agents",
+            "001-finance",
+            "downloads",
+            safeFilename,
+          );
+
+          await writeFile(
+            downloadPath,
+            attachmentBuffer,
+          );
+
+          console.log(
+            "Attachment saved to:",
+            downloadPath,
+          );
+
+          const pdfParser = new PDFParse({
+            data: attachmentBuffer,
+          });
+
+          try {
+            const pdfTextResult =
+              await pdfParser.getText();
+
+            remittancePaymentLines =
+              GmailAgent.extractRemittancePaymentLines(
+                pdfTextResult.text,
+              );
+
+            remittancePaymentDate =
+              GmailAgent.extractRemittancePaymentDate(
+                pdfTextResult.text,
+              );
+
+            remittancePdfTotal =
+              GmailAgent.extractRemittancePdfTotal(
+                pdfTextResult.text,
+              );
+
+            console.log(
+              "Fetched PDF text for:",
+              messageId,
+            );
+          } finally {
+            await pdfParser.destroy();
+          }
+        }
+      }
+
+    console.log(
+      "Fetched remittance message:",
+      email.data.id,
+    );
+
+    return GmailAgent.createRemittanceRecord(
+      messageId,
+      from,
+      subject,
+      date,
+      attachments,
+      remittancePaymentLines,
+      remittancePaymentDate,
+      remittancePdfTotal,
     );
   }
 }

@@ -942,4 +942,30 @@ Total AUD paid 423.54
         "REVIEW_REQUIRED",
       );
     });
+
+    it("marks a remittance for review when the reference date does not match the invoice date", () => {
+      const record = GmailAgent.createRemittanceRecord(
+        "message-123",
+        "Shirley Foley <messaging-service@post.xero.com>",
+        "Payment has been made by Cairns Taxis Limited for Grimwood Stephan140967985 Leased Driver for AUD 182.58",
+        "Mon, 10 Aug 2026 00:05:21 +0000",
+        [],
+        [
+          {
+            invoiceDate: "7 Aug 2026",
+            reference: "27082026",
+            invoiceTotal: 182.58,
+            amountPaid: 182.58,
+            stillOwing: 0,
+          },
+        ],
+        "10 Aug 2026",
+        182.58,
+      );
+
+      expect(record).not.toBeNull();
+      expect(record?.validationStatus).toBe(
+        "REVIEW_REQUIRED",
+      );
+    });
 });

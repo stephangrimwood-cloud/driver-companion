@@ -19,19 +19,6 @@ export class SheetsAgent {
     );
   }
 
-  async writeTestCell(): Promise<void> {
-    await this.client.spreadsheets.values.update({
-      spreadsheetId: this.config.spreadsheet_id,
-      range: `'${this.config.template_sheet}'!A40`,
-      valueInputOption: "RAW",
-      requestBody: {
-        values: [["Finance Agent Test"]],
-      },
-    });
-
-    console.log("✓ Test value written to Google Sheets.");
-  }
-
   async writeReportRow(
     sheetName: string,
     rowNumber: number,
@@ -153,5 +140,57 @@ export class SheetsAgent {
           typeof reportJson === "string" &&
           reportJson.trim().length > 0,
       );
+  }
+
+  async readMonthlyLedger(
+    sheetName: string,
+  ): Promise<string[][]> {
+    const response =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${sheetName}'!A:G`,
+      });
+
+    const rows = response.data.values ?? [];
+
+    console.log(
+      `Ledger rows from '${sheetName}':`,
+      rows,
+    );
+
+    return rows;
+  }
+
+  async updateLedgerStatus(
+    sheetName: string,
+    rowNumber: number,
+    status: string,
+  ): Promise<void> {
+    await this.client.spreadsheets.values.update({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: `'${sheetName}'!G${rowNumber}`,
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[status]],
+      },
+    });
+
+    console.log(
+      `✓ Ledger status updated: '${sheetName}' row ${rowNumber} → ${status}`,
+    );
+  }
+
+  async listSheetNames(): Promise<void> {
+    const response = await this.client.spreadsheets.get({
+      spreadsheetId: this.config.spreadsheet_id,
+      fields: "sheets.properties.title",
+    });
+
+    const sheetNames =
+      response.data.sheets
+        ?.map((sheet) => sheet.properties?.title)
+        .filter((title): title is string => Boolean(title)) ?? [];
+
+    console.log("Google Sheets tabs:", sheetNames);
   }
 }
