@@ -178,3 +178,159 @@ export function matchAccountBookingRecord(
 
   return matches[0];
 }
+
+export interface FinancialYearLedgerAccountBookingMatch
+  extends LedgerAccountBookingMatch {
+  sheetName: string;
+}
+
+export function matchAccountBookingRecordAcrossLedgers(
+  record: AccountBookingEmailRecord,
+  financialYearLedgers: Record<string, string[][]>,
+  financialYearStartYear: number,
+): FinancialYearLedgerAccountBookingMatch | null {
+  if (
+    record.paymentDate === null ||
+    record.paymentAmount === null ||
+    record.bookingReference === null
+  ) {
+    return null;
+  }
+
+  const paymentDate =
+    parsePaymentDate(record.paymentDate);
+
+  if (!paymentDate) {
+    return null;
+  }
+
+  const financialYearStart =
+    new Date(
+      Date.UTC(
+        financialYearStartYear,
+        6,
+        1,
+      ),
+    );
+
+  const financialYearEnd =
+    new Date(
+      Date.UTC(
+        financialYearStartYear + 1,
+        5,
+        30,
+        23,
+        59,
+        59,
+      ),
+    );
+
+  if (
+    paymentDate < financialYearStart ||
+    paymentDate > financialYearEnd
+  ) {
+    return null;
+  }
+
+  const monthNumbers: Record<string, number> = {
+    January: 1,
+    February: 2,
+    March: 3,
+    April: 4,
+    May: 5,
+    June: 6,
+    July: 7,
+    August: 8,
+    September: 9,
+    October: 10,
+    November: 11,
+    December: 12,
+  };
+
+  const matches:
+    FinancialYearLedgerAccountBookingMatch[] = [];
+
+  for (
+    const [sheetName, ledgerRows]
+    of Object.entries(financialYearLedgers)
+  ) {
+    const monthNumber =
+      monthNumbers[sheetName];
+
+    if (!monthNumber) {
+      continue;
+    }
+
+    const ledgerYear =
+      monthNumber >= 7
+        ? financialYearStartYear
+        : financialYearStartYear + 1;
+
+    for (
+      const [rowIndex, row]
+      of ledgerRows.entries()
+    ) {
+      const ledgerDate = row[0];
+
+      if (!ledgerDate) {
+        continue;
+      }
+
+      const parsedLedgerDate =
+        parseLedgerDate(
+          ledgerDate,
+          ledgerYear,
+        );
+
+      if (
+        !parsedLedgerDate ||
+        parsedLedgerDate > paymentDate
+      ) {
+        continue;
+      }
+
+      const accountPayment =
+        parseCurrency(row[3]);
+
+      if (accountPayment === null) {
+        continue;
+      }
+
+      const currentStatus =
+        row[6] ?? "";
+
+      if (currentStatus !== "Pending") {
+        continue;
+      }
+
+      const exactMatch =
+        Math.abs(
+          accountPayment -
+          record.paymentAmount,
+        ) < 0.001;
+
+      if (!exactMatch) {
+        continue;
+      }
+
+      matches.push({
+        sheetName,
+        ledgerDate,
+        rowNumber: rowIndex + 1,
+        accountPayment,
+        currentStatus,
+        bookingAmount:
+          record.paymentAmount,
+        bookingReference:
+          record.bookingReference,
+        result: "EXACT",
+      });
+    }
+  }
+
+  if (matches.length !== 1) {
+    return null;
+  }
+
+  return matches[0];
+}

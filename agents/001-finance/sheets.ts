@@ -3,6 +3,10 @@ import {
   loadGoogleSheetsConfig,
 } from "./auth";
 
+import {
+  getFinancialYearWorksheetNames,
+} from "./worksheet";
+
 import type { VerificationRecord } from "./types";
 
 export class SheetsAgent {
@@ -161,6 +165,21 @@ export class SheetsAgent {
     );
 
     return rows;
+  }
+
+  async readFinancialYearLedgers(): Promise<
+    Record<string, string[][]>
+  > {
+    const ledgers: Record<string, string[][]> = {};
+
+    for (
+      const sheetName of getFinancialYearWorksheetNames()
+    ) {
+      ledgers[sheetName] =
+        await this.readMonthlyLedger(sheetName);
+    }
+
+    return ledgers;
   }
 
   async readFinanceAgentLog(): Promise<string[][]> {

@@ -5,7 +5,12 @@ import {
   canVerifyRemittanceMatch,
   matchRemittancePaymentLine,
 } from "./remittance-matcher";
-import { matchAccountBookingRecord } from "./account-booking-matcher";
+import {
+  matchAccountBookingRecordAcrossLedgers,
+} from "./account-booking-matcher";
+import {
+  getFinancialYearWorksheetNameFromReference,
+} from "./worksheet";
 
 export class FinanceService {
   private gmail = new GmailAgent(financeAgentConfig);
@@ -20,8 +25,8 @@ export class FinanceService {
 
     void this.sheets.readSpreadsheetTitle();
 
-    let ledgerRows =
-      await this.sheets.readMonthlyLedger("August");
+    let financialYearLedgers =
+      await this.sheets.readFinancialYearLedgers();
 
     // Account Booking confirmations are processed first.
     for (const accountBookingRecord of accountBookingRecords) {
@@ -34,9 +39,10 @@ export class FinanceService {
         accountBookingRecord.validationStatus === "VALID"
       ) {
         const match =
-          matchAccountBookingRecord(
+          matchAccountBookingRecordAcrossLedgers(
             accountBookingRecord,
-            ledgerRows,
+            financialYearLedgers,
+            2026,
           );
 
         console.log(`
@@ -74,7 +80,7 @@ ${
             `Account Booking ref: ${match.bookingReference} — paid ${accountBookingRecord.paymentDate}`;
 
           await this.sheets.appendLedgerNote(
-            "August",
+            match.sheetName,
             match.rowNumber,
             note,
           );
@@ -99,8 +105,8 @@ NO SHEET CHANGES MADE
 
     // Re-read the ledger so remittance verification sees
     // any Account Booking notes written above.
-    ledgerRows =
-      await this.sheets.readMonthlyLedger("August");
+    financialYearLedgers =
+      await this.sheets.readFinancialYearLedgers();
 
     for (const remittanceRecord of remittanceRecords) {
       console.log(
@@ -110,10 +116,34 @@ NO SHEET CHANGES MADE
 
       if (remittanceRecord.validationStatus === "VALID") {
         for (const paymentLine of remittanceRecord.paymentLines) {
+          const sheetName =
+            getFinancialYearWorksheetNameFromReference(
+              paymentLine.reference,
+              2026,
+            );
+
+          if (!sheetName) {
+            console.log(`
+          REMITTANCE LINE
+
+          Date: ${paymentLine.invoiceDate}
+          Amount: $${paymentLine.amountPaid.toFixed(2)}
+
+          MATCH: INVALID WORKSHEET REFERENCE
+          Proposed Action: None
+
+          NO SHEET CHANGES MADE
+          `);
+            continue;
+          }
+
+          const ledgerRowsForPayment =
+            financialYearLedgers[sheetName];
+
           const match =
             matchRemittancePaymentLine(
               paymentLine,
-              ledgerRows,
+              ledgerRowsForPayment,
             );
 
           if (!match) {
@@ -158,7 +188,7 @@ Proposed Action: ${
 
           if (shouldVerify) {
             await this.sheets.updateLedgerStatus(
-              "August",
+              sheetName,
               match.rowNumber,
               "Verified",
             );

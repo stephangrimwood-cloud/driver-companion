@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   matchAccountBookingRecord,
+  matchAccountBookingRecordAcrossLedgers,
 } from "./account-booking-matcher";
 
 import type {
@@ -179,5 +180,71 @@ describe("Account Booking matcher", () => {
         );
 
     expect(match).toBeNull();
+  });
+
+  it("finds an Account Booking across financial year ledgers", () => {
+    const accountBookingRecord:
+      AccountBookingEmailRecord = {
+        messageId: "19fa688dcca5cc67",
+        classification: "ACCOUNT_BOOKING",
+        subject:
+          "Payment has been made by Cairns Taxis Limited for 4120 Stephan Grimwood for AUD 19.70",
+        receivedDate:
+          "Tue, 28 Jul 2026 02:23:34 +0000",
+        paymentDate: "28 Jul 2026",
+        invoiceDate: "27 Jul 2026",
+        pdfTotal: 19.70,
+        bookingReference: "8091343",
+        subjectTotalMatchesPdfTotal: true,
+        validationStatus: "VALID",
+        senderName: "Tammy Sabbadin",
+        senderEmail:
+          "messaging-service@post.xero.com",
+        paymentAmount: 19.70,
+        attachments: [],
+      };
+
+    const financialYearLedgers = {
+      July: [
+        [
+          "27/07",
+          "-$18.10",
+          "$140.75",
+          "$19.70",
+          "$142.35",
+          "CTL Export",
+          "Pending",
+        ],
+      ],
+      August: [
+        [
+          "15/08",
+          "$13.50",
+          "$173.85",
+          "$11.50",
+          "$198.85",
+          "CTL Export",
+          "Pending",
+        ],
+      ],
+    };
+
+    const match =
+      matchAccountBookingRecordAcrossLedgers(
+        accountBookingRecord,
+        financialYearLedgers,
+        2026,
+      );
+
+    expect(match).toEqual({
+      sheetName: "July",
+      ledgerDate: "27/07",
+      rowNumber: 1,
+      accountPayment: 19.70,
+      currentStatus: "Pending",
+      bookingAmount: 19.70,
+      bookingReference: "8091343",
+      result: "EXACT",
+    });
   });
 });

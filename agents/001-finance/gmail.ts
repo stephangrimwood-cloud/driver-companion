@@ -45,29 +45,38 @@ export class GmailAgent {
       auth: this.client,
     });
 
-    const response = await gmail.users.messages.list({
-      userId: "me",
-      maxResults: 5,
-      q: GMAIL_SEARCH_QUERIES.ACCOUNT_BOOKINGS,
-    });
-
     const accountBookingRecords:
       AccountBookingEmailRecord[] = [];
 
-    for (const message of response.data.messages ?? []) {
-      if (!message.id) {
-        continue;
+    let pageToken: string | undefined;
+
+    do {
+      const response =
+        await gmail.users.messages.list({
+          userId: "me",
+          maxResults: 100,
+          q: `${GMAIL_SEARCH_QUERIES.ACCOUNT_BOOKINGS} after:2026/06/30`,
+          pageToken,
+        });
+
+      for (const message of response.data.messages ?? []) {
+        if (!message.id) {
+          continue;
+        }
+
+        const record =
+          await this.processAccountBookingMessage(
+            message.id,
+          );
+
+        if (record) {
+          accountBookingRecords.push(record);
+        }
       }
 
-      const record =
-        await this.processAccountBookingMessage(
-          message.id,
-        );
-
-      if (record) {
-        accountBookingRecords.push(record);
-      }
-    }
+      pageToken =
+        response.data.nextPageToken ?? undefined;
+    } while (pageToken);
 
     console.log(
       "EXTRACTED ACCOUNT BOOKING RECORD COUNT:",
@@ -78,7 +87,7 @@ export class GmailAgent {
   }
 
   private async listRecentEmails(): Promise<RemittanceEmailRecord[]> {
-    console.log("Listing recent emails...");
+    console.log("Listing remittance emails...");
 
     const gmail = google.gmail({
       version: "v1",
@@ -87,59 +96,72 @@ export class GmailAgent {
 
     console.log("Connected to Gmail API.");
 
-    const response = await gmail.users.messages.list({
-      userId: "me",
-      maxResults: 5,
-      q: GMAIL_SEARCH_QUERIES.REMITTANCES,
-    });
-
     const remittanceCandidateIds: string[] = [];
 
-    for (const message of response.data.messages ?? []) {
-      if (!message.id) {
-        continue;
-      }
+    let pageToken: string | undefined;
 
-      const candidate = await gmail.users.messages.get({
+    do {
+      const response = await gmail.users.messages.list({
         userId: "me",
-        id: message.id,
-        format: "metadata",
-        metadataHeaders: [
-          "From",
-          "Subject",
-        ],
+        maxResults: 100,
+        q: `${GMAIL_SEARCH_QUERIES.REMITTANCES} after:2026/06/30`,
+        pageToken,
       });
 
-      const candidateHeaders =
-        candidate.data.payload?.headers ?? [];
+      for (const message of response.data.messages ?? []) {
+        if (!message.id) {
+          continue;
+        }
 
-      const candidateFrom =
-        candidateHeaders.find(
-          (header) => header.name === "From",
-        )?.value ?? "(Unknown Sender)";
+        const candidate =
+          await gmail.users.messages.get({
+            userId: "me",
+            id: message.id,
+            format: "metadata",
+            metadataHeaders: [
+              "From",
+              "Subject",
+            ],
+          });
 
-      const candidateSubject =
-        candidateHeaders.find(
-          (header) => header.name === "Subject",
-        )?.value ?? "(No Subject)";
+        const candidateHeaders =
+          candidate.data.payload?.headers ?? [];
 
-      const candidateClassification =
-        GmailAgent.classifyEmail(
-          candidateFrom,
+        const candidateFrom =
+          candidateHeaders.find(
+            (header) => header.name === "From",
+          )?.value ?? "(Unknown Sender)";
+
+        const candidateSubject =
+          candidateHeaders.find(
+            (header) => header.name === "Subject",
+          )?.value ?? "(No Subject)";
+
+        const candidateClassification =
+          GmailAgent.classifyEmail(
+            candidateFrom,
+            candidateSubject,
+          );
+
+        console.log(
+          "PAYMENT CANDIDATE:",
+          message.id,
+          candidateClassification,
           candidateSubject,
         );
 
-      console.log(
-        "PAYMENT CANDIDATE:",
-        message.id,
-        candidateClassification,
-        candidateSubject,
-      );
-
-      if (candidateClassification === "REMITTANCE") {
-        remittanceCandidateIds.push(message.id);
+        if (
+          candidateClassification === "REMITTANCE"
+        ) {
+          remittanceCandidateIds.push(
+            message.id,
+          );
+        }
       }
-    }
+
+      pageToken =
+        response.data.nextPageToken ?? undefined;
+    } while (pageToken);
 
     const extractedRemittanceRecords:
       RemittanceEmailRecord[] = [];
