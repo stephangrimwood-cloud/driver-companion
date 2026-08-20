@@ -245,6 +245,12 @@ export class SheetsAgent {
       return;
     }
 
+    await this.appendLedgerNote(
+      sheetName,
+      rowNumber,
+      source,
+    );
+
     await this.updateLedgerStatus(
       sheetName,
       rowNumber,
