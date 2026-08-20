@@ -51,6 +51,7 @@ export interface AccountBookingEmailRecord {
   subject: string;
   receivedDate: string;
   paymentDate: string | null;
+  invoiceDate: string | null;
   pdfTotal: number | null;
   bookingReference: string | null;
   subjectTotalMatchesPdfTotal: boolean;

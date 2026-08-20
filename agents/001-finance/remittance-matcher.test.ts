@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canVerifyRemittanceMatch,
   matchRemittancePaymentLine,
 } from "./remittance-matcher";
 
@@ -49,6 +50,8 @@ describe("Remittance ledger matcher", () => {
       ledgerDate: "16/08",
       rowNumber: 2,
       settlement: 122.9,
+      accountPayment: 0,
+      notes: "CTL Export",
       currentStatus: "Pending",
       remittanceAmount: 122.9,
       result: "EXACT",
@@ -74,6 +77,8 @@ describe("Remittance ledger matcher", () => {
       ledgerDate: "15/08",
       rowNumber: 1,
       settlement: 173.85,
+      accountPayment: 11.5,
+      notes: "CTL Export",
       currentStatus: "Pending",
       remittanceAmount: 23.05,
       result: "NO_MATCH",
@@ -119,4 +124,64 @@ describe("Remittance ledger matcher", () => {
     expect(result?.result).toBe("EXACT");
     expect(result?.ledgerDate).toBe("16/08");
     });
+
+  it("does not verify an exact settlement while its Account Payment is unconfirmed", () => {
+    const paymentLine: RemittancePaymentLine = {
+      invoiceDate: "15 Aug 2026",
+      reference: "15082026",
+      invoiceTotal: 173.85,
+      amountPaid: 173.85,
+      stillOwing: 0,
+    };
+
+    const result =
+      matchRemittancePaymentLine(
+        paymentLine,
+        ledgerRows,
+      );
+
+    expect(result?.result).toBe("EXACT");
+
+    expect(
+      result
+        ? canVerifyRemittanceMatch(result)
+        : false,
+    ).toBe(false);
+  });
+
+  it("allows verification when the settlement and Account Payment are both confirmed", () => {
+    const paymentLine: RemittancePaymentLine = {
+      invoiceDate: "15 Aug 2026",
+      reference: "15082026",
+      invoiceTotal: 173.85,
+      amountPaid: 173.85,
+      stillOwing: 0,
+    };
+
+    const rowsWithConfirmedAccountBooking = [
+      [
+        "15/08",
+        "$13.50",
+        "$173.85",
+        "$11.50",
+        "$198.85",
+        "CTL Export | Account Booking ref: 8176745 — paid 17 Aug 2026",
+        "Pending",
+      ],
+    ];
+
+    const result =
+      matchRemittancePaymentLine(
+        paymentLine,
+        rowsWithConfirmedAccountBooking,
+      );
+
+    expect(result?.result).toBe("EXACT");
+
+    expect(
+      result
+        ? canVerifyRemittanceMatch(result)
+        : false,
+    ).toBe(true);
+  });
 });

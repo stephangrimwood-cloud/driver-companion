@@ -6,12 +6,16 @@ export interface LedgerRemittanceMatch {
   ledgerDate: string;
   rowNumber: number;
   settlement: number;
+  accountPayment: number;
+  notes: string;
   currentStatus: string;
   remittanceAmount: number;
   result: "EXACT" | "NO_MATCH";
 }
 
-function parseCurrency(value: string | undefined): number | null {
+function parseCurrency(
+  value: string | undefined,
+): number | null {
   if (!value) {
     return null;
   }
@@ -65,6 +69,10 @@ export function matchRemittancePaymentLine(
       return null;
     }
 
+    const accountPayment =
+      parseCurrency(row[3]) ?? 0;
+
+    const notes = row[5] ?? "";
     const currentStatus = row[6] ?? "";
 
     const exactMatch =
@@ -76,6 +84,8 @@ export function matchRemittancePaymentLine(
       ledgerDate,
       rowNumber: rowIndex + 1,
       settlement,
+      accountPayment,
+      notes,
       currentStatus,
       remittanceAmount: paymentLine.amountPaid,
       result: exactMatch
@@ -85,4 +95,23 @@ export function matchRemittancePaymentLine(
   }
 
   return null;
+}
+
+export function canVerifyRemittanceMatch(
+  match: LedgerRemittanceMatch,
+): boolean {
+  if (
+    match.result !== "EXACT" ||
+    match.currentStatus !== "Pending"
+  ) {
+    return false;
+  }
+
+  if (match.accountPayment <= 0) {
+    return true;
+  }
+
+  return match.notes.includes(
+    "Account Booking ref:",
+  );
 }

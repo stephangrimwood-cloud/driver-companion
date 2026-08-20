@@ -1,7 +1,11 @@
 import { GmailAgent } from "./gmail";
 import { financeAgentConfig } from "./config";
 import { SheetsAgent } from "./sheets";
-import { matchRemittancePaymentLine } from "./remittance-matcher";
+import {
+  canVerifyRemittanceMatch,
+  matchRemittancePaymentLine,
+} from "./remittance-matcher";
+import { matchAccountBookingRecord } from "./account-booking-matcher";
 
 export class FinanceService {
   private gmail = new GmailAgent(financeAgentConfig);
@@ -11,9 +15,91 @@ export class FinanceService {
     const remittanceRecords =
       await this.gmail.initialise();
 
+    const accountBookingRecords =
+      await this.gmail.initialiseAccountBookings();
+
     void this.sheets.readSpreadsheetTitle();
 
-    const ledgerRows =
+    let ledgerRows =
+      await this.sheets.readMonthlyLedger("August");
+
+    // Account Booking confirmations are processed first.
+    for (const accountBookingRecord of accountBookingRecords) {
+      console.log(
+        "Finance Service received Account Booking:",
+        accountBookingRecord,
+      );
+
+      if (
+        accountBookingRecord.validationStatus === "VALID"
+      ) {
+        const match =
+          matchAccountBookingRecord(
+            accountBookingRecord,
+            ledgerRows,
+          );
+
+        console.log(`
+ACCOUNT BOOKING
+
+Invoice Date: ${accountBookingRecord.invoiceDate ?? "Unknown"}
+Payment Date: ${accountBookingRecord.paymentDate ?? "Unknown"}
+Booking Reference: ${accountBookingRecord.bookingReference ?? "Unknown"}
+Amount: ${
+          accountBookingRecord.paymentAmount !== null
+            ? `$${accountBookingRecord.paymentAmount.toFixed(2)}`
+            : "Unknown"
+        }
+
+MATCH RESULT
+
+${
+  match
+    ? `Ledger Date: ${match.ledgerDate}
+Account Payment: $${match.accountPayment.toFixed(2)}
+Current Status: ${match.currentStatus}
+Match: ${match.result}`
+    : "No matching ledger date found"
+}
+
+${
+  match
+    ? "ACTION: Add Account Booking payment note"
+    : "NO SHEET CHANGES MADE"
+}
+`);
+
+        if (match) {
+          const note =
+            `Account Booking ref: ${match.bookingReference} — paid ${accountBookingRecord.paymentDate}`;
+
+          await this.sheets.appendLedgerNote(
+            "August",
+            match.rowNumber,
+            note,
+          );
+        }
+      } else {
+        console.log(`
+ACCOUNT BOOKING REVIEW REQUIRED
+
+Booking Reference: ${accountBookingRecord.bookingReference ?? "Unknown"}
+Amount: ${
+          accountBookingRecord.paymentAmount !== null
+            ? `$${accountBookingRecord.paymentAmount.toFixed(2)}`
+            : "Unknown"
+        }
+
+Validation: REVIEW_REQUIRED
+
+NO SHEET CHANGES MADE
+`);
+      }
+    }
+
+    // Re-read the ledger so remittance verification sees
+    // any Account Booking notes written above.
+    ledgerRows =
       await this.sheets.readMonthlyLedger("August");
 
     for (const remittanceRecord of remittanceRecords) {
@@ -46,8 +132,7 @@ NO SHEET CHANGES MADE
           }
 
           const shouldVerify =
-            match.result === "EXACT" &&
-            match.currentStatus === "Pending";
+            canVerifyRemittanceMatch(match);
 
           console.log(`
 REMITTANCE LINE

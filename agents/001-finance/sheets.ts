@@ -240,6 +240,46 @@ export class SheetsAgent {
     });
   }
 
+  async appendLedgerNote(
+    sheetName: string,
+    rowNumber: number,
+    note: string,
+  ): Promise<void> {
+    const response =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${sheetName}'!F${rowNumber}`,
+      });
+
+    const currentNotes =
+      response.data.values?.[0]?.[0] ?? "";
+
+    if (currentNotes.includes(note)) {
+      console.log(
+        `Ledger note already present: '${sheetName}' row ${rowNumber}.`,
+      );
+      return;
+    }
+
+    const updatedNotes =
+      currentNotes.trim().length > 0
+        ? `${currentNotes} | ${note}`
+        : note;
+
+    await this.client.spreadsheets.values.update({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: `'${sheetName}'!F${rowNumber}`,
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[updatedNotes]],
+      },
+    });
+
+    console.log(
+      `✓ Ledger note updated: '${sheetName}' row ${rowNumber}.`,
+    );
+  }
+
   async updateLedgerStatus(
     sheetName: string,
     rowNumber: number,

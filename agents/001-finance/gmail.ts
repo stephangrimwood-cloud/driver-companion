@@ -32,6 +32,51 @@ export class GmailAgent {
     return this.listRecentEmails();
   }
 
+  initialiseAccountBookings(): Promise<AccountBookingEmailRecord[]> {
+    console.log("Finance Agent: Account Booking Gmail processing initialised.");
+
+    return this.listRecentAccountBookingEmails();
+  }
+
+  private async listRecentAccountBookingEmails():
+    Promise<AccountBookingEmailRecord[]> {
+    const gmail = google.gmail({
+      version: "v1",
+      auth: this.client,
+    });
+
+    const response = await gmail.users.messages.list({
+      userId: "me",
+      maxResults: 5,
+      q: GMAIL_SEARCH_QUERIES.ACCOUNT_BOOKINGS,
+    });
+
+    const accountBookingRecords:
+      AccountBookingEmailRecord[] = [];
+
+    for (const message of response.data.messages ?? []) {
+      if (!message.id) {
+        continue;
+      }
+
+      const record =
+        await this.processAccountBookingMessage(
+          message.id,
+        );
+
+      if (record) {
+        accountBookingRecords.push(record);
+      }
+    }
+
+    console.log(
+      "EXTRACTED ACCOUNT BOOKING RECORD COUNT:",
+      accountBookingRecords.length,
+    );
+
+    return accountBookingRecords;
+  }
+
   private async listRecentEmails(): Promise<RemittanceEmailRecord[]> {
     console.log("Listing recent emails...");
 
@@ -290,6 +335,7 @@ export class GmailAgent {
     paymentDate: string | null = null,
     pdfTotal: number | null = null,
     bookingReference: string | null = null,
+    invoiceDate: string | null = null,
   ): AccountBookingEmailRecord | null {
     const classification = GmailAgent.classifyEmail(
       from,
@@ -300,34 +346,85 @@ export class GmailAgent {
       return null;
     }
 
+    const paymentAmount =
+      GmailAgent.extractPaymentAmount(subject);
+
+    const subjectTotalMatchesPdfTotal =
+      GmailAgent.doesSubjectTotalMatchPdfTotal(
+        paymentAmount,
+        pdfTotal,
+      );
+
+    const hasRequiredFields =
+      paymentDate !== null &&
+      invoiceDate !== null &&
+      pdfTotal !== null &&
+      bookingReference !== null &&
+      paymentAmount !== null;
+
     return {
       messageId,
       classification,
       subject,
       receivedDate,
       paymentDate,
+      invoiceDate,
       pdfTotal,
       bookingReference,
-      subjectTotalMatchesPdfTotal:
-        GmailAgent.doesSubjectTotalMatchPdfTotal(
-          GmailAgent.extractPaymentAmount(subject),
-          pdfTotal,
-        ),
+      subjectTotalMatchesPdfTotal,
       validationStatus:
-        GmailAgent.doesSubjectTotalMatchPdfTotal(
-          GmailAgent.extractPaymentAmount(subject),
-          pdfTotal,
-        )
+        hasRequiredFields &&
+        subjectTotalMatchesPdfTotal
           ? "VALID"
           : "REVIEW_REQUIRED",
       senderName:
         GmailAgent.extractSenderName(from),
       senderEmail:
         GmailAgent.extractSenderEmail(from),
-      paymentAmount:
-        GmailAgent.extractPaymentAmount(subject),
+      paymentAmount,
       attachments,
     };
+  }
+
+  static createAccountBookingRecordFromPdfText(
+    messageId: string,
+    from: string,
+    subject: string,
+    receivedDate: string,
+    attachments: EmailAttachmentMetadata[],
+    pdfText: string,
+  ): AccountBookingEmailRecord | null {
+    const paymentDate =
+      GmailAgent.extractRemittancePaymentDate(
+        pdfText,
+      );
+
+    const pdfTotal =
+      GmailAgent.extractRemittancePdfTotal(
+        pdfText,
+      );
+
+    const bookingReference =
+      GmailAgent.extractAccountBookingReference(
+        pdfText,
+      );
+
+      const invoiceDate =
+      GmailAgent.extractAccountBookingInvoiceDate(
+        pdfText,
+      );
+
+    return GmailAgent.createAccountBookingRecord(
+      messageId,
+      from,
+      subject,
+      receivedDate,
+      attachments,
+      paymentDate,
+      pdfTotal,
+      bookingReference,
+      invoiceDate,
+    );
   }
 
   static extractAccountBookingReference(
@@ -335,6 +432,16 @@ export class GmailAgent {
   ): string | null {
     const match = pdfText.match(
       /^[ \t]*\d{1,2}\s+[A-Za-z]{3}\s+\d{4}\s+(\d{7})\s+[\d,]+\.\d{2}\s+[\d,]+\.\d{2}\s+[\d,]+\.\d{2}[ \t]*$/m,
+    );
+
+    return match?.[1] ?? null;
+  }
+
+  static extractAccountBookingInvoiceDate(
+    pdfText: string,
+  ): string | null {
+    const match = pdfText.match(
+      /^[ \t]*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})\s+\d{7}\s+[\d,]+\.\d{2}\s+[\d,]+\.\d{2}\s+[\d,]+\.\d{2}[ \t]*$/m,
     );
 
     return match?.[1] ?? null;
@@ -654,6 +761,124 @@ export class GmailAgent {
         paymentAmount,
         pdfTotal,
       )
+    );
+  }
+
+  private async processAccountBookingMessage(
+    messageId: string,
+  ): Promise<AccountBookingEmailRecord | null> {
+    const gmail = google.gmail({
+      version: "v1",
+      auth: this.client,
+    });
+
+    console.log(
+      "Processing Account Booking message:",
+      messageId,
+    );
+
+    const email = await gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+    });
+
+    const headers = email.data.payload?.headers ?? [];
+    const emailParts =
+      email.data.payload?.parts ?? [];
+
+    const attachments =
+      GmailAgent.extractAttachmentMetadata(
+        emailParts,
+      );
+
+    const subject =
+      headers.find(
+        (header) => header.name === "Subject",
+      )?.value ?? "(No Subject)";
+
+    const from =
+      headers.find(
+        (header) => header.name === "From",
+      )?.value ?? "(Unknown Sender)";
+
+    const date =
+      headers.find(
+        (header) => header.name === "Date",
+      )?.value ?? "(Unknown Date)";
+
+    let pdfText = "";
+
+    const firstAttachment = attachments[0];
+
+    if (firstAttachment) {
+      const attachmentResponse =
+        await gmail.users.messages.attachments.get({
+          userId: "me",
+          messageId,
+          id: firstAttachment.attachmentId,
+        });
+
+      const encodedData =
+        attachmentResponse.data.data;
+
+      if (encodedData) {
+        const attachmentBuffer = Buffer.from(
+          encodedData
+            .replace(/-/g, "+")
+            .replace(/_/g, "/"),
+          "base64",
+        );
+
+        const safeFilename =
+          `${messageId}-${path.basename(
+            firstAttachment.filename,
+          )}`;
+
+        const downloadPath = path.join(
+          process.cwd(),
+          "agents",
+          "001-finance",
+          "downloads",
+          safeFilename,
+        );
+
+        await writeFile(
+          downloadPath,
+          attachmentBuffer,
+        );
+
+        console.log(
+          "Account Booking attachment saved to:",
+          downloadPath,
+        );
+
+        const pdfParser = new PDFParse({
+          data: attachmentBuffer,
+        });
+
+        try {
+          const pdfTextResult =
+            await pdfParser.getText();
+
+          pdfText = pdfTextResult.text;
+
+          console.log(
+            "Fetched Account Booking PDF text for:",
+            messageId,
+          );
+        } finally {
+          await pdfParser.destroy();
+        }
+      }
+    }
+
+    return GmailAgent.createAccountBookingRecordFromPdfText(
+      messageId,
+      from,
+      subject,
+      date,
+      attachments,
+      pdfText,
     );
   }
 
