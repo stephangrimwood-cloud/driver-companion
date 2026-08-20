@@ -222,6 +222,53 @@ export class SheetsAgent {
     );
   }
 
+  async backfillManualVerificationRecord(
+    sheetName: string,
+    rowNumber: number,
+    ledgerDate: string,
+    source: string,
+  ): Promise<void> {
+    const statusResponse =
+      await this.client.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheet_id,
+        range: `'${sheetName}'!G${rowNumber}`,
+      });
+
+    const currentStatus =
+      statusResponse.data.values?.[0]?.[0] ?? "";
+
+    if (currentStatus !== "Verified") {
+      console.log(
+        `Manual audit backfill skipped: ${ledgerDate} is currently '${currentStatus}'.`,
+      );
+      return;
+    }
+
+    const logRows =
+      await this.readFinanceAgentLog();
+
+    const alreadyLogged =
+      logRows.some(
+        (row) =>
+          row[0] === ledgerDate &&
+          row[1] === "MANUAL",
+      );
+
+    if (alreadyLogged) {
+      console.log(
+        `Manual audit already exists: ${ledgerDate}.`,
+      );
+      return;
+    }
+
+    await this.writeVerificationRecord({
+      ledgerDate,
+      method: "MANUAL",
+      verifiedAt: new Date().toISOString(),
+      source,
+    });
+  }
+
   async verifyLedgerRowManually(
     sheetName: string,
     rowNumber: number,
