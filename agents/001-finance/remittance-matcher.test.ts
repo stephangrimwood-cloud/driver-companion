@@ -184,4 +184,49 @@ describe("Remittance ledger matcher", () => {
         : false,
     ).toBe(true);
   });
+
+    it("allows a one cent settlement difference as rounding tolerance", () => {
+    const paymentLine: RemittancePaymentLine = {
+      invoiceDate: "31 Jul 2026",
+      reference: "31072026",
+      invoiceTotal: 141.27,
+      amountPaid: 141.27,
+      stillOwing: 0,
+    };
+
+    const rowsWithRoundingDifference = [
+      [
+        "31/07",
+        "$18.40",
+        "$141.28",
+        "$0.00",
+        "$159.68",
+        "CTL Export",
+        "Pending",
+      ],
+    ];
+
+    const result =
+      matchRemittancePaymentLine(
+        paymentLine,
+        rowsWithRoundingDifference,
+      );
+
+    expect(result).toEqual({
+      ledgerDate: "31/07",
+      rowNumber: 1,
+      settlement: 141.28,
+      accountPayment: 0,
+      notes: "CTL Export",
+      currentStatus: "Pending",
+      remittanceAmount: 141.27,
+      result: "ROUNDING_TOLERANCE",
+    });
+
+    expect(
+      result
+        ? canVerifyRemittanceMatch(result)
+        : false,
+    ).toBe(true);
+  });
 });

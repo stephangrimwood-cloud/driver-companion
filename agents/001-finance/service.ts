@@ -197,7 +197,10 @@ Proposed Action: ${
               ledgerDate: match.ledgerDate,
               method: "AUTOMATIC",
               verifiedAt: new Date().toISOString(),
-              source: `CTL remittance ${remittanceRecord.messageId}`,
+              source:
+                match.result === "ROUNDING_TOLERANCE"
+                  ? `CTL remittance ${remittanceRecord.messageId} (ROUNDING_TOLERANCE)`
+                  : `CTL remittance ${remittanceRecord.messageId}`,
             });
           } else {
             console.log("NO SHEET CHANGES MADE");

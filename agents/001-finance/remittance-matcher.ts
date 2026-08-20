@@ -10,7 +10,10 @@ export interface LedgerRemittanceMatch {
   notes: string;
   currentStatus: string;
   remittanceAmount: number;
-  result: "EXACT" | "NO_MATCH";
+  result:
+  | "EXACT"
+  | "ROUNDING_TOLERANCE"
+  | "NO_MATCH";
 }
 
 function parseCurrency(
@@ -75,10 +78,23 @@ export function matchRemittancePaymentLine(
     const notes = row[5] ?? "";
     const currentStatus = row[6] ?? "";
 
-    const exactMatch =
+    const settlementCents =
+      Math.round(settlement * 100);
+
+    const remittanceCents =
+      Math.round(paymentLine.amountPaid * 100);
+
+    const differenceCents =
       Math.abs(
-        settlement - paymentLine.amountPaid,
-      ) < 0.001;
+        settlementCents - remittanceCents,
+      );
+
+    const result =
+      differenceCents === 0
+        ? "EXACT"
+        : differenceCents === 1
+          ? "ROUNDING_TOLERANCE"
+          : "NO_MATCH";
 
     return {
       ledgerDate,
@@ -88,9 +104,7 @@ export function matchRemittancePaymentLine(
       notes,
       currentStatus,
       remittanceAmount: paymentLine.amountPaid,
-      result: exactMatch
-        ? "EXACT"
-        : "NO_MATCH",
+      result,
     };
   }
 
@@ -101,11 +115,14 @@ export function canVerifyRemittanceMatch(
   match: LedgerRemittanceMatch,
 ): boolean {
   if (
-    match.result !== "EXACT" ||
-    match.currentStatus !== "Pending"
-  ) {
-    return false;
-  }
+  (
+    match.result !== "EXACT" &&
+    match.result !== "ROUNDING_TOLERANCE"
+  ) ||
+  match.currentStatus !== "Pending"
+) {
+  return false;
+}
 
   if (match.accountPayment <= 0) {
     return true;
