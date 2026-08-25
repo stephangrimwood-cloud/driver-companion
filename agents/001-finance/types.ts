@@ -108,7 +108,8 @@ export type FinanceAgentLogType =
   | VerificationMethod
   | "REMITTANCE"
   | "ACCOUNT_BOOKING"
-  | "BACKUP";
+  | "BACKUP"
+  | "EXPORT";
 
   export interface FinanceAgentLogRecord {
     reference: string;

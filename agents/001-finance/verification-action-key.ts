@@ -29,3 +29,10 @@ export function getBackupActionKey(
 ): string {
   return `BACKUP|${reportId}|${backedUpAt}`;
 }
+
+export function getGoogleSheetsExportActionKey(
+  shiftDate: string,
+  exportedAt: string,
+): string {
+  return `EXPORT|GOOGLE_SHEETS|${shiftDate}|${exportedAt}`;
+}

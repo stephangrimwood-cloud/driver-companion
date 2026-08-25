@@ -6,6 +6,9 @@ import {
   getWorksheetName,
   getWorksheetRow,
 } from "../../../../../agents/001-finance/worksheet";
+import {
+  getGoogleSheetsExportActionKey,
+} from "../../../../../agents/001-finance/verification-action-key";
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,6 +27,7 @@ export async function POST(request: NextRequest) {
     const row = mapReportsToSheetRow(reports);
     const sheetName = getWorksheetName(shiftDate);
     const rowNumber = getWorksheetRow(shiftDate);
+    const exportedAt = new Date().toISOString();
 
     const sheets = new SheetsAgent();
 
@@ -32,6 +36,17 @@ export async function POST(request: NextRequest) {
       rowNumber,
       row,
     );
+
+    await sheets.writeFinanceAgentLogRecord({
+      reference: shiftDate,
+      type: "EXPORT",
+      loggedAt: exportedAt,
+      source: `Google Sheets ${sheetName} row ${rowNumber}`,
+      actionKey: getGoogleSheetsExportActionKey(
+        shiftDate,
+        exportedAt,
+      ),
+    });
 
     return NextResponse.json({
       success: true,

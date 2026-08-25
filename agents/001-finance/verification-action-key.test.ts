@@ -6,6 +6,7 @@ import {
   getBackupActionKey,
   getManualVerificationActionKey,
   getRemittanceEmailActionKey,
+  getGoogleSheetsExportActionKey,
 } from "./verification-action-key";
 
 describe("Verification action keys", () => {
@@ -54,6 +55,17 @@ describe("Verification action keys", () => {
       ),
     ).toBe(
       "BACKUP|report-123|2026-08-25T06:23:00.000Z",
+    );
+  });
+
+  it("creates a stable Google Sheets export action key", () => {
+    expect(
+      getGoogleSheetsExportActionKey(
+        "2026-08-25",
+        "2026-08-25T06:45:00.000Z",
+      ),
+    ).toBe(
+      "EXPORT|GOOGLE_SHEETS|2026-08-25|2026-08-25T06:45:00.000Z",
     );
   });
 });
