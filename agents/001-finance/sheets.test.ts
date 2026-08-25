@@ -370,4 +370,45 @@ describe("SheetsAgent manual verification audit backfill", () => {
       expect(appendMock).not.toHaveBeenCalled();
     },
   );
+
+  it(
+    "leaves a Verified row unchanged when audit backfill fails",
+    async () => {
+      getMock
+        .mockResolvedValueOnce({
+          data: {
+            values: [["Verified"]],
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            values: [
+              [
+                "Ledger Date",
+                "Method",
+                "Verified At",
+                "Source",
+              ],
+            ],
+          },
+        });
+
+      appendMock.mockRejectedValue(
+        new Error("Audit log write failed"),
+      );
+
+      const sheets = new SheetsAgent();
+
+      await expect(
+        sheets.backfillManualVerificationRecord(
+          "August",
+          19,
+          "14/08",
+          "Historical manual verification backfill",
+        ),
+      ).rejects.toThrow("Audit log write failed");
+
+      expect(updateMock).not.toHaveBeenCalled();
+    },
+  );
 });
