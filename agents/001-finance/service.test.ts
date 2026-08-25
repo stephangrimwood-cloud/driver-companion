@@ -102,4 +102,54 @@ describe("FinanceService automatic verification recovery", () => {
       "Pending",
     );
   });
+
+  it("reports both failures when audit logging and rollback fail", async () => {
+    gmailInitialiseMock.mockResolvedValue([
+        {
+        validationStatus: "VALID",
+        messageId: "test-message-id",
+        paymentLines: [
+            {
+            invoiceDate: "16 Aug 2026",
+            reference: "16082026",
+            invoiceTotal: 122.9,
+            amountPaid: 122.9,
+            stillOwing: 0,
+            },
+        ],
+        },
+    ]);
+
+    readFinancialYearLedgersMock.mockResolvedValue({
+        August: [
+        [
+            "16/08",
+            "$72.40",
+            "$122.90",
+            "$0.00",
+            "$195.30",
+            "CTL Export",
+            "Pending",
+        ],
+        ],
+    });
+
+    updateLedgerStatusMock
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(
+        new Error("Rollback failed"),
+        );
+
+    writeVerificationRecordMock.mockRejectedValue(
+        new Error("Audit log write failed"),
+    );
+
+    const service = new FinanceService();
+
+    await expect(
+        service.initialise(),
+    ).rejects.toThrow(
+        "Audit log write failed; rollback to Pending failed: Rollback failed",
+    );
+    });
 });

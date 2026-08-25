@@ -195,6 +195,51 @@ describe("SheetsAgent manual verification", () => {
       );
     },
   );
+
+  it(
+    "reports both failures when MANUAL audit logging and rollback fail",
+    async () => {
+      getMock
+        .mockResolvedValueOnce({
+          data: {
+            values: [["Pending"]],
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            values: [["CTL Export"]],
+          },
+        });
+
+      updateMock
+        .mockResolvedValueOnce({
+          data: {},
+        })
+        .mockResolvedValueOnce({
+          data: {},
+        })
+        .mockRejectedValueOnce(
+          new Error("Rollback failed"),
+        );
+
+      appendMock.mockRejectedValue(
+        new Error("Audit log write failed"),
+      );
+
+      const sheets = new SheetsAgent();
+
+      await expect(
+        sheets.verifyLedgerRowManually(
+          "August",
+          19,
+          "14/08",
+          "Split shift manually reviewed",
+        ),
+      ).rejects.toThrow(
+        "Audit log write failed; rollback to Pending failed: Rollback failed",
+      );
+    },
+  );
 });
 
 describe("SheetsAgent manual verification audit backfill", () => {

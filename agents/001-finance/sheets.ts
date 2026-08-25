@@ -322,11 +322,27 @@ export class SheetsAgent {
         source,
       });
     } catch (error) {
-      await this.updateLedgerStatus(
-        sheetName,
-        rowNumber,
-        "Pending",
-      );
+      try {
+        await this.updateLedgerStatus(
+          sheetName,
+          rowNumber,
+          "Pending",
+        );
+      } catch (rollbackError) {
+        const auditMessage =
+          error instanceof Error
+            ? error.message
+            : String(error);
+
+        const rollbackMessage =
+          rollbackError instanceof Error
+            ? rollbackError.message
+            : String(rollbackError);
+
+        throw new Error(
+          `${auditMessage}; rollback to Pending failed: ${rollbackMessage}`,
+        );
+      }
 
       throw error;
     }

@@ -204,11 +204,27 @@ Proposed Action: ${
                     : `CTL remittance ${remittanceRecord.messageId}`,
               });
             } catch (error) {
-              await this.sheets.updateLedgerStatus(
-                sheetName,
-                match.rowNumber,
-                "Pending",
-              );
+              try {
+                await this.sheets.updateLedgerStatus(
+                  sheetName,
+                  match.rowNumber,
+                  "Pending",
+                );
+              } catch (rollbackError) {
+                const auditMessage =
+                  error instanceof Error
+                    ? error.message
+                    : String(error);
+
+                const rollbackMessage =
+                  rollbackError instanceof Error
+                    ? rollbackError.message
+                    : String(rollbackError);
+
+                throw new Error(
+                  `${auditMessage}; rollback to Pending failed: ${rollbackMessage}`,
+                );
+              }
 
               throw error;
             }
