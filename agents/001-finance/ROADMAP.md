@@ -436,7 +436,7 @@
 
 - [x] Record broader email-processing actions.
 - [x] Record backup actions.
-- [ ] Record export actions.
+- [x] Record export actions.
 - [ ] Record reconciliation review outcomes.
 - [ ] Record processing errors.
 - [ ] Include relevant report or document references where appropriate.
