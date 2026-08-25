@@ -16,3 +16,9 @@ export function getAccountBookingEmailActionKey(
 ): string {
   return `EMAIL|ACCOUNT_BOOKING|${messageId}`;
 }
+
+export function getRemittanceEmailActionKey(
+  messageId: string,
+): string {
+  return `EMAIL|REMITTANCE|${messageId}`;
+}

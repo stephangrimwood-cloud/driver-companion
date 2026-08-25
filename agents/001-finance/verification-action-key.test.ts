@@ -4,6 +4,7 @@ import {
   getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
   getManualVerificationActionKey,
+  getRemittanceEmailActionKey,
 } from "./verification-action-key";
 
 describe("Verification action keys", () => {
@@ -31,6 +32,16 @@ describe("Verification action keys", () => {
       ),
     ).toBe(
       "EMAIL|ACCOUNT_BOOKING|test-message-id",
+    );
+  });
+
+  it("creates a stable remittance email key", () => {
+    expect(
+      getRemittanceEmailActionKey(
+        "test-message-id",
+      ),
+    ).toBe(
+      "EMAIL|REMITTANCE|test-message-id",
     );
   });
 });

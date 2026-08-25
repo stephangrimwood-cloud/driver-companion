@@ -14,6 +14,7 @@ import {
 import {
   getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
+  getRemittanceEmailActionKey,
 } from "./verification-action-key";
 
 export class FinanceService {
@@ -129,6 +130,9 @@ NO SHEET CHANGES MADE
       );
 
       if (remittanceRecord.validationStatus === "VALID") {
+        let allPaymentLinesHandled =
+          remittanceRecord.paymentLines.length > 0;
+
         for (const paymentLine of remittanceRecord.paymentLines) {
           const sheetName =
             getFinancialYearWorksheetNameFromReference(
@@ -138,16 +142,18 @@ NO SHEET CHANGES MADE
 
           if (!sheetName) {
             console.log(`
-          REMITTANCE LINE
+REMITTANCE LINE
 
-          Date: ${paymentLine.invoiceDate}
-          Amount: $${paymentLine.amountPaid.toFixed(2)}
+Date: ${paymentLine.invoiceDate}
+Amount: $${paymentLine.amountPaid.toFixed(2)}
 
-          MATCH: INVALID WORKSHEET REFERENCE
-          Proposed Action: None
+MATCH: INVALID WORKSHEET REFERENCE
+Proposed Action: None
 
-          NO SHEET CHANGES MADE
-          `);
+NO SHEET CHANGES MADE
+`);
+
+            allPaymentLinesHandled = false;
             continue;
           }
 
@@ -161,6 +167,8 @@ NO SHEET CHANGES MADE
             );
 
           if (!match) {
+            allPaymentLinesHandled = false;
+
             console.log(`
 REMITTANCE LINE
 
@@ -172,6 +180,7 @@ Proposed Action: None
 
 NO SHEET CHANGES MADE
 `);
+
             continue;
           }
 
@@ -247,8 +256,33 @@ Proposed Action: ${
               throw error;
             }
           } else {
+            const alreadyVerified =
+              (
+                match.result === "EXACT" ||
+                match.result === "ROUNDING_TOLERANCE"
+              ) &&
+              match.currentStatus === "Verified";
+
+            if (!alreadyVerified) {
+              allPaymentLinesHandled = false;
+            }
+
             console.log("NO SHEET CHANGES MADE");
           }
+        }
+
+        if (allPaymentLinesHandled) {
+          await this.sheets.writeFinanceAgentLogRecord({
+            reference:
+              remittanceRecord.paymentReference ??
+              remittanceRecord.messageId,
+            type: "REMITTANCE",
+            loggedAt: new Date().toISOString(),
+            source: `Gmail message ${remittanceRecord.messageId}`,
+            actionKey: getRemittanceEmailActionKey(
+              remittanceRecord.messageId,
+            ),
+          });
         }
       } else if (
         remittanceRecord.validationStatus === "REVIEW_REQUIRED"
