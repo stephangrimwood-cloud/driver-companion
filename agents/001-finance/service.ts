@@ -193,15 +193,25 @@ Proposed Action: ${
               "Verified",
             );
 
-            await this.sheets.writeVerificationRecord({
-              ledgerDate: match.ledgerDate,
-              method: "AUTOMATIC",
-              verifiedAt: new Date().toISOString(),
-              source:
-                match.result === "ROUNDING_TOLERANCE"
-                  ? `CTL remittance ${remittanceRecord.messageId} (ROUNDING_TOLERANCE)`
-                  : `CTL remittance ${remittanceRecord.messageId}`,
-            });
+            try {
+              await this.sheets.writeVerificationRecord({
+                ledgerDate: match.ledgerDate,
+                method: "AUTOMATIC",
+                verifiedAt: new Date().toISOString(),
+                source:
+                  match.result === "ROUNDING_TOLERANCE"
+                    ? `CTL remittance ${remittanceRecord.messageId} (ROUNDING_TOLERANCE)`
+                    : `CTL remittance ${remittanceRecord.messageId}`,
+              });
+            } catch (error) {
+              await this.sheets.updateLedgerStatus(
+                sheetName,
+                match.rowNumber,
+                "Pending",
+              );
+
+              throw error;
+            }
           } else {
             console.log("NO SHEET CHANGES MADE");
           }
