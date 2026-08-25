@@ -11,7 +11,10 @@ import {
   getManualVerificationActionKey,
 } from "./verification-action-key";
 
-import type { VerificationRecord } from "./types";
+import type {
+  FinanceAgentLogRecord,
+  VerificationRecord,
+} from "./types";
 
 export class SheetsAgent {
   private client = createGoogleSheetsClient();
@@ -201,6 +204,45 @@ export class SheetsAgent {
     );
 
     return rows;
+  }
+
+  async writeFinanceAgentLogRecord(
+    record: FinanceAgentLogRecord,
+  ): Promise<void> {
+    const logRows =
+      await this.readFinanceAgentLog();
+
+    const alreadyLogged =
+      logRows.some(
+        (row) => row[4] === record.actionKey,
+      );
+
+    if (alreadyLogged) {
+      console.log(
+        `Finance Agent action already logged: ${record.actionKey}.`,
+      );
+      return;
+    }
+
+    await this.client.spreadsheets.values.append({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: "'Finance Agent Log'!A:E",
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        values: [[
+          record.reference,
+          record.type,
+          record.loggedAt,
+          record.source,
+          record.actionKey,
+        ]],
+      },
+    });
+
+    console.log(
+      `✓ Finance Agent action logged: ${record.actionKey}`,
+    );
   }
 
   async writeVerificationRecord(

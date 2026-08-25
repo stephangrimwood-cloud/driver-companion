@@ -103,3 +103,16 @@ export type VerificationMethod =
     source: string;
     actionKey: string;
   }
+
+export type FinanceAgentLogType =
+  | VerificationMethod
+  | "REMITTANCE"
+  | "ACCOUNT_BOOKING";
+
+  export interface FinanceAgentLogRecord {
+    reference: string;
+    type: FinanceAgentLogType;
+    loggedAt: string;
+    source: string;
+    actionKey: string;
+  }

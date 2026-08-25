@@ -426,44 +426,89 @@ describe("SheetsAgent manual verification audit backfill", () => {
     },
   );
 
-  describe("SheetsAgent verification action key duplicate protection", () => {
-    beforeEach(() => {
-      vi.resetAllMocks();
-    });
+  });
 
-    it("does not append a verification record when its action key already exists", async () => {
-      getMock.mockResolvedValueOnce({
-        data: {
-          values: [
-            [
-              "Ledger Date",
-              "Method",
-              "Verified At",
-              "Source",
-              "Action Key",
-            ],
-            [
-              "14/08",
-              "MANUAL",
-              "2026-08-25T01:00:00.000Z",
-              "Existing verification",
-              "VERIFY|MANUAL|14/08",
-            ],
+describe("SheetsAgent verification action key duplicate protection", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("does not append a verification record when its action key already exists", async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        values: [
+          [
+            "Reference",
+            "Type",
+            "Logged At",
+            "Source",
+            "Action Key",
           ],
-        },
-      });
-
-      const sheets = new SheetsAgent();
-
-      await sheets.writeVerificationRecord({
-        ledgerDate: "14/08",
-        method: "MANUAL",
-        verifiedAt: "2026-08-25T02:00:00.000Z",
-        source: "Duplicate attempt",
-        actionKey: "VERIFY|MANUAL|14/08",
-      });
-
-      expect(appendMock).not.toHaveBeenCalled();
+          [
+            "14/08",
+            "MANUAL",
+            "2026-08-25T01:00:00.000Z",
+            "Existing verification",
+            "VERIFY|MANUAL|14/08",
+          ],
+        ],
+      },
     });
+
+    const sheets = new SheetsAgent();
+
+    await sheets.writeVerificationRecord({
+      ledgerDate: "14/08",
+      method: "MANUAL",
+      verifiedAt: "2026-08-25T02:00:00.000Z",
+      source: "Duplicate attempt",
+      actionKey: "VERIFY|MANUAL|14/08",
+    });
+
+    expect(appendMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("SheetsAgent generic Finance Agent logging", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+
+    getMock.mockResolvedValue({
+      data: {
+        values: [],
+      },
+    });
+  });
+
+  it("writes a generic Finance Agent log record", async () => {
+    appendMock.mockResolvedValue({
+      data: {},
+    });
+
+    const sheets = new SheetsAgent();
+
+    await sheets.writeFinanceAgentLogRecord({
+      reference: "test-message-id",
+      type: "REMITTANCE",
+      loggedAt: "2026-08-25T03:00:00.000Z",
+      source: "CTL remittance email",
+      actionKey:
+        "EMAIL|REMITTANCE|test-message-id",
+    });
+
+    expect(appendMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        range: "'Finance Agent Log'!A:E",
+        requestBody: {
+          values: [[
+            "test-message-id",
+            "REMITTANCE",
+            "2026-08-25T03:00:00.000Z",
+            "CTL remittance email",
+            "EMAIL|REMITTANCE|test-message-id",
+          ]],
+        },
+      }),
+    );
   });
 });
