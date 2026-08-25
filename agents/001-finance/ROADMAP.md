@@ -427,7 +427,7 @@
 
 ### Logging Hardening 🚧 In Progress
 
-- [ ] Improve atomicity between ledger Status updates and audit-log writes.
+- [x] Improve atomicity between ledger Status updates and audit-log writes.
 - [x] Add recovery handling if a Status update succeeds but audit logging fails.
 - [ ] Add recovery handling if an audit write succeeds but a related future operation fails.
 - [ ] Define duplicate-protection strategy for broader Finance Agent log actions.
