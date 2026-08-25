@@ -435,7 +435,7 @@
 ### Future Logging 🚧 In Progress
 
 - [x] Record broader email-processing actions.
-- [ ] Record backup actions.
+- [x] Record backup actions.
 - [ ] Record export actions.
 - [ ] Record reconciliation review outcomes.
 - [ ] Record processing errors.
