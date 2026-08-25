@@ -432,9 +432,9 @@
 - [ ] Add recovery handling if an audit write succeeds but a related future operation fails.
 - [x] Define duplicate-protection strategy for broader Finance Agent log actions.
 
-### Future Logging 📋 Planned
+### Future Logging 🚧 In Progress
 
-- [ ] Record broader email-processing actions.
+- [x] Record broader email-processing actions.
 - [ ] Record backup actions.
 - [ ] Record export actions.
 - [ ] Record reconciliation review outcomes.
