@@ -261,12 +261,22 @@ export class SheetsAgent {
       return;
     }
 
-    await this.writeVerificationRecord({
-      ledgerDate,
-      method: "MANUAL",
-      verifiedAt: new Date().toISOString(),
-      source,
-    });
+    try {
+      await this.writeVerificationRecord({
+        ledgerDate,
+        method: "MANUAL",
+        verifiedAt: new Date().toISOString(),
+        source,
+      });
+    } catch (error) {
+      await this.updateLedgerStatus(
+        sheetName,
+        rowNumber,
+        "Pending",
+      );
+
+      throw error;
+    }
   }
 
   async verifyLedgerRowManually(
@@ -304,12 +314,22 @@ export class SheetsAgent {
       "Verified",
     );
 
-    await this.writeVerificationRecord({
-      ledgerDate,
-      method: "MANUAL",
-      verifiedAt: new Date().toISOString(),
-      source,
-    });
+    try {
+      await this.writeVerificationRecord({
+        ledgerDate,
+        method: "MANUAL",
+        verifiedAt: new Date().toISOString(),
+        source,
+      });
+    } catch (error) {
+      await this.updateLedgerStatus(
+        sheetName,
+        rowNumber,
+        "Pending",
+      );
+
+      throw error;
+    }
   }
 
   async appendLedgerNote(

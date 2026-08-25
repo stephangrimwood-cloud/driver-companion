@@ -132,6 +132,69 @@ describe("SheetsAgent manual verification", () => {
       expect(appendMock).not.toHaveBeenCalled();
     },
   );
+
+  it(
+    "restores the row to Pending when MANUAL audit logging fails",
+    async () => {
+      getMock
+        .mockResolvedValueOnce({
+          data: {
+            values: [["Pending"]],
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            values: [["CTL Export"]],
+          },
+        });
+
+      updateMock.mockResolvedValue({
+        data: {},
+      });
+
+      appendMock.mockRejectedValue(
+        new Error("Audit log write failed"),
+      );
+
+      const sheets = new SheetsAgent();
+
+      await expect(
+        sheets.verifyLedgerRowManually(
+          "August",
+          19,
+          "14/08",
+          "Split shift manually reviewed",
+        ),
+      ).rejects.toThrow("Audit log write failed");
+
+      expect(updateMock).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          range: "'August'!F19",
+        }),
+      );
+
+      expect(updateMock).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          range: "'August'!G19",
+          requestBody: {
+            values: [["Verified"]],
+          },
+        }),
+      );
+
+      expect(updateMock).toHaveBeenNthCalledWith(
+        3,
+        expect.objectContaining({
+          range: "'August'!G19",
+          requestBody: {
+            values: [["Pending"]],
+          },
+        }),
+      );
+    },
+  );
 });
 
 describe("SheetsAgent manual verification audit backfill", () => {
