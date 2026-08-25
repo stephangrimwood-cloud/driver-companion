@@ -38,6 +38,12 @@ import { SheetsAgent } from "./sheets";
 describe("SheetsAgent manual verification", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    getMock.mockResolvedValue({
+      data: {
+        values: [],
+      },
+    });
   });
 
   it(
@@ -96,13 +102,14 @@ describe("SheetsAgent manual verification", () => {
 
       expect(appendMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          range: "'Finance Agent Log'!A:D",
+          range: "'Finance Agent Log'!A:E",
           requestBody: {
             values: [[
               "14/08",
               "MANUAL",
               expect.any(String),
               "Split shift manually reviewed",
+              "VERIFY|MANUAL|14/08",
             ]],
           },
         }),
@@ -245,6 +252,12 @@ describe("SheetsAgent manual verification", () => {
 describe("SheetsAgent manual verification audit backfill", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    getMock.mockResolvedValue({
+      data: {
+        values: [],
+      },
+    });
   });
 
   it(
@@ -292,13 +305,14 @@ describe("SheetsAgent manual verification audit backfill", () => {
 
       expect(appendMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          range: "'Finance Agent Log'!A:D",
+          range: "'Finance Agent Log'!A:E",
           requestBody: {
             values: [[
               "14/08",
               "MANUAL",
               expect.any(String),
               "Historical manual verification backfill",
+              "VERIFY|MANUAL|14/08",
             ]],
           },
         }),
@@ -411,4 +425,45 @@ describe("SheetsAgent manual verification audit backfill", () => {
       expect(updateMock).not.toHaveBeenCalled();
     },
   );
+
+  describe("SheetsAgent verification action key duplicate protection", () => {
+    beforeEach(() => {
+      vi.resetAllMocks();
+    });
+
+    it("does not append a verification record when its action key already exists", async () => {
+      getMock.mockResolvedValueOnce({
+        data: {
+          values: [
+            [
+              "Ledger Date",
+              "Method",
+              "Verified At",
+              "Source",
+              "Action Key",
+            ],
+            [
+              "14/08",
+              "MANUAL",
+              "2026-08-25T01:00:00.000Z",
+              "Existing verification",
+              "VERIFY|MANUAL|14/08",
+            ],
+          ],
+        },
+      });
+
+      const sheets = new SheetsAgent();
+
+      await sheets.writeVerificationRecord({
+        ledgerDate: "14/08",
+        method: "MANUAL",
+        verifiedAt: "2026-08-25T02:00:00.000Z",
+        source: "Duplicate attempt",
+        actionKey: "VERIFY|MANUAL|14/08",
+      });
+
+      expect(appendMock).not.toHaveBeenCalled();
+    });
+  });
 });

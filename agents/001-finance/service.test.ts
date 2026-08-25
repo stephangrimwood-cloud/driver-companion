@@ -101,6 +101,16 @@ describe("FinanceService automatic verification recovery", () => {
       1,
       "Pending",
     );
+
+    expect(writeVerificationRecordMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ledgerDate: "16/08",
+        method: "AUTOMATIC",
+        source: "CTL remittance test-message-id",
+        actionKey:
+        "VERIFY|AUTOMATIC|16/08|test-message-id",
+      }),
+    );
   });
 
   it("reports both failures when audit logging and rollback fail", async () => {

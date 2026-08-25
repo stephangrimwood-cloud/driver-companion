@@ -11,6 +11,9 @@ import {
 import {
   getFinancialYearWorksheetNameFromReference,
 } from "./worksheet";
+import {
+  getAutomaticVerificationActionKey,
+} from "./verification-action-key";
 
 export class FinanceService {
   private gmail = new GmailAgent(financeAgentConfig);
@@ -202,6 +205,10 @@ Proposed Action: ${
                   match.result === "ROUNDING_TOLERANCE"
                     ? `CTL remittance ${remittanceRecord.messageId} (ROUNDING_TOLERANCE)`
                     : `CTL remittance ${remittanceRecord.messageId}`,
+                actionKey: getAutomaticVerificationActionKey(
+                  match.ledgerDate,
+                  remittanceRecord.messageId,
+                ),
               });
             } catch (error) {
               try {

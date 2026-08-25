@@ -97,8 +97,9 @@ export type VerificationMethod =
   | "MANUAL";
 
   export interface VerificationRecord {
-  ledgerDate: string;
-  method: VerificationMethod;
-  verifiedAt: string;
-  source: string;
-}
+    ledgerDate: string;
+    method: VerificationMethod;
+    verifiedAt: string;
+    source: string;
+    actionKey: string;
+  }

@@ -7,6 +7,10 @@ import {
   getFinancialYearWorksheetNames,
 } from "./worksheet";
 
+import {
+  getManualVerificationActionKey,
+} from "./verification-action-key";
+
 import type { VerificationRecord } from "./types";
 
 export class SheetsAgent {
@@ -202,9 +206,24 @@ export class SheetsAgent {
   async writeVerificationRecord(
     record: VerificationRecord,
   ): Promise<void> {
+    const logRows =
+      await this.readFinanceAgentLog();
+
+    const alreadyLogged =
+      logRows.some(
+        (row) => row[4] === record.actionKey,
+      );
+
+    if (alreadyLogged) {
+      console.log(
+        `Verification action already logged: ${record.actionKey}.`,
+      );
+      return;
+    }
+
     await this.client.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheet_id,
-      range: "'Finance Agent Log'!A:D",
+      range: "'Finance Agent Log'!A:E",
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: {
@@ -213,6 +232,7 @@ export class SheetsAgent {
           record.method,
           record.verifiedAt,
           record.source,
+          record.actionKey,
         ]],
       },
     });
@@ -266,6 +286,9 @@ export class SheetsAgent {
       method: "MANUAL",
       verifiedAt: new Date().toISOString(),
       source,
+      actionKey: getManualVerificationActionKey(
+        ledgerDate,
+      ),
     });
   }
 
@@ -310,6 +333,9 @@ export class SheetsAgent {
         method: "MANUAL",
         verifiedAt: new Date().toISOString(),
         source,
+        actionKey: getManualVerificationActionKey(
+          ledgerDate,
+        ),
       });
     } catch (error) {
       try {
