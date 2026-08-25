@@ -12,6 +12,7 @@ import {
   getFinancialYearWorksheetNameFromReference,
 } from "./worksheet";
 import {
+  getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
 } from "./verification-action-key";
 
@@ -87,6 +88,16 @@ ${
             match.rowNumber,
             note,
           );
+
+          await this.sheets.writeFinanceAgentLogRecord({
+            reference: match.bookingReference,
+            type: "ACCOUNT_BOOKING",
+            loggedAt: new Date().toISOString(),
+            source: `Gmail message ${accountBookingRecord.messageId}`,
+            actionKey: getAccountBookingEmailActionKey(
+              accountBookingRecord.messageId,
+            ),
+          });
         }
       } else {
         console.log(`

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
   getManualVerificationActionKey,
 } from "./verification-action-key";
@@ -21,5 +22,15 @@ describe("Verification action keys", () => {
     expect(
       getManualVerificationActionKey("14/08"),
     ).toBe("VERIFY|MANUAL|14/08");
+  });
+
+  it("creates a stable Account Booking email key", () => {
+    expect(
+      getAccountBookingEmailActionKey(
+        "test-message-id",
+      ),
+    ).toBe(
+      "EMAIL|ACCOUNT_BOOKING|test-message-id",
+    );
   });
 });

@@ -10,3 +10,9 @@ export function getManualVerificationActionKey(
 ): string {
   return `VERIFY|MANUAL|${ledgerDate}`;
 }
+
+export function getAccountBookingEmailActionKey(
+  messageId: string,
+): string {
+  return `EMAIL|ACCOUNT_BOOKING|${messageId}`;
+}

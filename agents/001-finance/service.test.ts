@@ -5,15 +5,21 @@ const {
   gmailInitialiseAccountBookingsMock,
   readSpreadsheetTitleMock,
   readFinancialYearLedgersMock,
+  appendLedgerNoteMock,
   updateLedgerStatusMock,
   writeVerificationRecordMock,
+  writeFinanceAgentLogRecordMock,
+  matchAccountBookingRecordAcrossLedgersMock,
 } = vi.hoisted(() => ({
   gmailInitialiseMock: vi.fn(),
   gmailInitialiseAccountBookingsMock: vi.fn(),
   readSpreadsheetTitleMock: vi.fn(),
   readFinancialYearLedgersMock: vi.fn(),
+  appendLedgerNoteMock: vi.fn(),
   updateLedgerStatusMock: vi.fn(),
   writeVerificationRecordMock: vi.fn(),
+  writeFinanceAgentLogRecordMock: vi.fn(),
+  matchAccountBookingRecordAcrossLedgersMock: vi.fn(),
 }));
 
 vi.mock("./gmail", () => ({
@@ -24,12 +30,20 @@ vi.mock("./gmail", () => ({
   },
 }));
 
+vi.mock("./account-booking-matcher", () => ({
+  matchAccountBookingRecordAcrossLedgers:
+    matchAccountBookingRecordAcrossLedgersMock,
+}));
+
 vi.mock("./sheets", () => ({
   SheetsAgent: class {
     readSpreadsheetTitle = readSpreadsheetTitleMock;
     readFinancialYearLedgers = readFinancialYearLedgersMock;
+    appendLedgerNote = appendLedgerNoteMock;
     updateLedgerStatus = updateLedgerStatusMock;
     writeVerificationRecord = writeVerificationRecordMock;
+    writeFinanceAgentLogRecord =
+      writeFinanceAgentLogRecordMock;
   },
 }));
 
@@ -161,5 +175,110 @@ describe("FinanceService automatic verification recovery", () => {
     ).rejects.toThrow(
         "Audit log write failed; rollback to Pending failed: Rollback failed",
     );
+    });
+});
+
+describe("FinanceService Account Booking logging", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    gmailInitialiseMock.mockResolvedValue([]);
+
+    readSpreadsheetTitleMock.mockResolvedValue(
+      "Taxi Business Records v2.0",
+    );
+
+    readFinancialYearLedgersMock.mockResolvedValue({
+      August: [],
+    });
+
+    appendLedgerNoteMock.mockResolvedValue(undefined);
+
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
+    );
+  });
+
+  it("logs a successfully processed Account Booking email", async () => {
+    gmailInitialiseAccountBookingsMock.mockResolvedValue([
+      {
+        messageId: "account-booking-message-id",
+        validationStatus: "VALID",
+        invoiceDate: "14 Aug 2026",
+        paymentDate: "15 Aug 2026",
+        bookingReference: "8091343",
+        paymentAmount: 19.7,
+      },
+    ]);
+
+    matchAccountBookingRecordAcrossLedgersMock.mockReturnValue({
+      sheetName: "August",
+      rowNumber: 19,
+      ledgerDate: "14/08",
+      accountPayment: 19.7,
+      currentStatus: "Pending",
+      result: "EXACT",
+      bookingReference: "8091343",
+    });
+
+    const service = new FinanceService();
+
+    await service.initialise();
+
+    expect(appendLedgerNoteMock).toHaveBeenCalledWith(
+      "August",
+      19,
+      "Account Booking ref: 8091343 — paid 15 Aug 2026",
+    );
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reference: "8091343",
+        type: "ACCOUNT_BOOKING",
+        source:
+          "Gmail message account-booking-message-id",
+        actionKey:
+          "EMAIL|ACCOUNT_BOOKING|account-booking-message-id",
+      }),
+    );
+  });
+
+  it("does not log the Account Booking email when the ledger note write fails", async () => {
+    gmailInitialiseAccountBookingsMock.mockResolvedValue([
+        {
+        messageId: "account-booking-message-id",
+        validationStatus: "VALID",
+        invoiceDate: "14 Aug 2026",
+        paymentDate: "15 Aug 2026",
+        bookingReference: "8091343",
+        paymentAmount: 19.7,
+        },
+    ]);
+
+    matchAccountBookingRecordAcrossLedgersMock.mockReturnValue({
+        sheetName: "August",
+        rowNumber: 19,
+        ledgerDate: "14/08",
+        accountPayment: 19.7,
+        currentStatus: "Pending",
+        result: "EXACT",
+        bookingReference: "8091343",
+    });
+
+    appendLedgerNoteMock.mockRejectedValue(
+        new Error("Ledger note write failed"),
+    );
+
+    const service = new FinanceService();
+
+    await expect(
+        service.initialise(),
+    ).rejects.toThrow("Ledger note write failed");
+
+    expect(
+        writeFinanceAgentLogRecordMock,
+    ).not.toHaveBeenCalled();
     });
 });
