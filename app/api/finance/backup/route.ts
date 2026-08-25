@@ -4,6 +4,10 @@ import { SheetsAgent } from "../../../../agents/001-finance/sheets";
 
 import { parseReportBackups } from "../../../../agents/001-finance/parser";
 
+import {
+  getBackupActionKey,
+} from "../../../../agents/001-finance/verification-action-key";
+
 export async function GET() {
   try {
     const sheets = new SheetsAgent();
@@ -41,13 +45,26 @@ export async function POST(request: NextRequest) {
 
     const sheets = new SheetsAgent();
 
+    const backedUpAt = new Date().toISOString();
+
     await sheets.writeReportBackup(
       report.id,
       report.shiftDate,
-      new Date().toISOString(),
+      backedUpAt,
       "0.1.0",
       JSON.stringify(report),
     );
+
+    await sheets.writeFinanceAgentLogRecord({
+      reference: report.id,
+      type: "BACKUP",
+      loggedAt: backedUpAt,
+      source: "Shift Mate cloud backup",
+      actionKey: getBackupActionKey(
+        report.id,
+        backedUpAt,
+      ),
+    });
 
     return NextResponse.json({
       success: true,

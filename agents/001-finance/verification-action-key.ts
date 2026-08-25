@@ -22,3 +22,10 @@ export function getRemittanceEmailActionKey(
 ): string {
   return `EMAIL|REMITTANCE|${messageId}`;
 }
+
+export function getBackupActionKey(
+  reportId: string,
+  backedUpAt: string,
+): string {
+  return `BACKUP|${reportId}|${backedUpAt}`;
+}

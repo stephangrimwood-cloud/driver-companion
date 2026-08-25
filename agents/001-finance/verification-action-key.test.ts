@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
+  getBackupActionKey,
   getManualVerificationActionKey,
   getRemittanceEmailActionKey,
 } from "./verification-action-key";
@@ -42,6 +43,17 @@ describe("Verification action keys", () => {
       ),
     ).toBe(
       "EMAIL|REMITTANCE|test-message-id",
+    );
+  });
+
+  it("creates a stable backup action key", () => {
+    expect(
+      getBackupActionKey(
+        "report-123",
+        "2026-08-25T06:23:00.000Z",
+      ),
+    ).toBe(
+      "BACKUP|report-123|2026-08-25T06:23:00.000Z",
     );
   });
 });
