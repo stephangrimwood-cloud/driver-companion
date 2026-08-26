@@ -440,7 +440,7 @@
 - [x] Record reconciliation review outcomes.
 - [x] Record processing errors.
 - [x] Include relevant report or document references where appropriate.
-- [ ] Decide whether the Finance Agent Log should remain visible or hidden during normal use.
+- [x] Keep the Finance Agent Log hidden during normal use, while retaining it as an accessible audit trail.
 
 ---
 
