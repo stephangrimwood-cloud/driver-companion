@@ -438,7 +438,7 @@
 - [x] Record backup actions.
 - [x] Record export actions.
 - [x] Record reconciliation review outcomes.
-- [ ] Record processing errors.
+- [x] Record processing errors.
 - [ ] Include relevant report or document references where appropriate.
 - [ ] Decide whether the Finance Agent Log should remain visible or hidden during normal use.
 
