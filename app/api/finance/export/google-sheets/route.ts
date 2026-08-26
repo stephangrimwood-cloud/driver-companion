@@ -25,6 +25,12 @@ export async function POST(request: NextRequest) {
 
     const shiftDate = reports[0].shiftDate;
 
+    const reportReference =
+      reports
+        .map((report: { id?: string }) => report.id)
+        .filter(Boolean)
+        .join(", ") || shiftDate;
+
     const row = mapReportsToSheetRow(reports);
     const sheetName = getWorksheetName(shiftDate);
     const rowNumber = getWorksheetRow(shiftDate);
@@ -48,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     try {
       await sheets.writeFinanceAgentLogRecord({
-        reference: shiftDate,
+        reference: reportReference,
         type: "ERROR",
         loggedAt: occurredAt,
         source: `EXPORT_WRITE — ${errorMessage}`,
@@ -69,7 +75,7 @@ export async function POST(request: NextRequest) {
   }
 
     await sheets.writeFinanceAgentLogRecord({
-      reference: shiftDate,
+      reference: reportReference,
       type: "EXPORT",
       loggedAt: exportedAt,
       source: `Google Sheets ${sheetName} row ${rowNumber}`,

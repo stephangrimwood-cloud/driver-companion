@@ -117,7 +117,7 @@ describe(
         writeFinanceAgentLogRecordMock.mock.calls[0][0];
 
       expect(logRecord).toEqual({
-        reference: "2026-08-25",
+        reference: "report-123",
         type: "EXPORT",
         loggedAt: expect.any(String),
         source: "Google Sheets August row 30",
@@ -161,7 +161,7 @@ describe(
         writeFinanceAgentLogRecordMock.mock.calls[0][0];
 
       expect(logRecord).toEqual({
-        reference: "2026-08-25",
+        reference: "report-123",
         type: "ERROR",
         loggedAt: expect.any(String),
         source: "EXPORT_WRITE — Ledger export failed",
@@ -202,6 +202,43 @@ describe(
 
       expect(response.status).toBe(500);
       expect(result.message).toBe("Ledger export failed");
+    });
+
+    it("includes all Shift Mate report IDs in the export reference", async () => {
+      const request = new NextRequest(
+        "http://localhost/api/finance/export/google-sheets",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            reports: [
+              {
+                id: "report-123",
+                shiftDate: "2026-08-25",
+              },
+              {
+                id: "report-456",
+                shiftDate: "2026-08-25",
+              },
+            ],
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const response = await POST(request);
+
+      expect(response.status).toBe(200);
+
+      expect(
+        writeFinanceAgentLogRecordMock,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reference: "report-123, report-456",
+          type: "EXPORT",
+        }),
+      );
     });
   },
 );
