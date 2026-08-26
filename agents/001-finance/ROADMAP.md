@@ -425,11 +425,11 @@
 - [x] Prevent duplicate MANUAL backfill records.
 - [x] Confirm historical manual audit coverage for 06/07, 13/07, 14/08 and 15/08.
 
-### Logging Hardening 🚧 In Progress
+### Logging Hardening ✅ Complete
 
 - [x] Improve atomicity between ledger Status updates and audit-log writes.
 - [x] Add recovery handling if a Status update succeeds but audit logging fails.
-- [ ] Add recovery handling if an audit write succeeds but a related future operation fails.
+- [x] Avoid business-changing operations after audit writes; later logging failures preserve the completed operation.
 - [x] Define duplicate-protection strategy for broader Finance Agent log actions.
 
 ### Future Logging ✅ Complete
