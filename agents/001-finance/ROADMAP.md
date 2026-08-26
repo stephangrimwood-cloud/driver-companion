@@ -121,7 +121,7 @@
 - [x] Record Account Booking income separately in `Account Payment`.
 - [x] Calculate `Total Income = Cash + Settlement + Account Payment`.
 - [x] Preserve Notes and verification Status alongside the financial values.
-- [ ] Add a permanent visible methodology note to each monthly worksheet for accountant/ATO review.
+- [x] Add a permanent visible methodology note to each monthly worksheet for accountant/ATO review.
 
 ### Automatic Backup ✅ Complete
 
