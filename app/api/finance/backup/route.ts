@@ -6,7 +6,13 @@ import { parseReportBackups } from "../../../../agents/001-finance/parser";
 
 import {
   getBackupActionKey,
+  getReconciliationActionKey,
 } from "../../../../agents/001-finance/verification-action-key";
+
+import {
+  calculateReconciliationTotal,
+  getReconciliationOutcome,
+} from "../../../../agents/001-finance/reconciliation";
 
 export async function GET() {
   try {
@@ -47,6 +53,24 @@ export async function POST(request: NextRequest) {
 
     const backedUpAt = new Date().toISOString();
 
+    const reconciliationTotal =
+      calculateReconciliationTotal({
+        cashTaken: Number(report.cashTaken ?? 0),
+        accountBookings: Number(
+          report.accountBookings ?? 0,
+        ),
+        payable: Number(report.payable ?? 0),
+        areaCharge: Number(
+          report.areaCharge ?? report.tolls ?? 0,
+        ),
+      });
+
+    const reconciliationOutcome =
+      getReconciliationOutcome(
+        reconciliationTotal,
+        Number(report.driverShare ?? 0),
+      );
+
     await sheets.writeReportBackup(
       report.id,
       report.shiftDate,
@@ -65,6 +89,26 @@ export async function POST(request: NextRequest) {
         backedUpAt,
       ),
     });
+
+    try {
+      await sheets.writeFinanceAgentLogRecord({
+        reference: report.id,
+        type: "RECONCILIATION",
+        loggedAt: backedUpAt,
+        source:
+          `${reconciliationOutcome} — ` +
+          `Reconciliation $${reconciliationTotal.toFixed(2)} / ` +
+          `Driver Share $${Number(report.driverShare ?? 0).toFixed(2)}`,
+        actionKey: getReconciliationActionKey(
+          report.id,
+        ),
+      });
+    } catch (error) {
+      console.error(
+        "Unable to log reconciliation outcome:",
+        error,
+      );
+    }
 
     return NextResponse.json({
       success: true,

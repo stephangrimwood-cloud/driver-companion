@@ -107,4 +107,123 @@ describe("POST /api/finance/backup", () => {
         writeFinanceAgentLogRecordMock,
     ).not.toHaveBeenCalled();
   });
+
+  it("keeps the backup successful when reconciliation logging fails", async () => {
+    writeReportBackupMock.mockResolvedValue(undefined);
+
+    writeFinanceAgentLogRecordMock
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(
+        new Error("Reconciliation log failed"),
+      );
+
+    const request = new NextRequest(
+      "http://localhost/api/finance/backup",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id: "report-123",
+          shiftDate: "2026-08-25",
+          cashTaken: "100.00",
+          accountBookings: "20.00",
+          payable: 10,
+          areaCharge: "5.00",
+          driverShare: 105,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+  });
+
+  it("logs a MATCH reconciliation outcome", async () => {
+    writeReportBackupMock.mockResolvedValue(undefined);
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
+    );
+
+    const request = new NextRequest(
+      "http://localhost/api/finance/backup",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id: "report-123",
+          shiftDate: "2026-08-25",
+          cashTaken: "100.00",
+          accountBookings: "20.00",
+          payable: 10,
+          areaCharge: "5.00",
+          driverShare: 105,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reference: "report-123",
+        type: "RECONCILIATION",
+        source:
+          "MATCH — Reconciliation $105.00 / Driver Share $105.00",
+        actionKey:
+          "RECONCILIATION|report-123",
+      }),
+    );
+  });
+
+  it("logs a MISMATCH reconciliation outcome", async () => {
+    writeReportBackupMock.mockResolvedValue(undefined);
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
+    );
+
+    const request = new NextRequest(
+      "http://localhost/api/finance/backup",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id: "report-456",
+          shiftDate: "2026-08-25",
+          cashTaken: "100.00",
+          accountBookings: "20.00",
+          payable: 10,
+          areaCharge: "5.00",
+          driverShare: 104,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(200);
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reference: "report-456",
+        type: "RECONCILIATION",
+        source:
+          "MISMATCH — Reconciliation $105.00 / Driver Share $104.00",
+        actionKey:
+          "RECONCILIATION|report-456",
+      }),
+    );
+  });
 });

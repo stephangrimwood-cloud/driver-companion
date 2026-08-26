@@ -36,3 +36,9 @@ export function getGoogleSheetsExportActionKey(
 ): string {
   return `EXPORT|GOOGLE_SHEETS|${shiftDate}|${exportedAt}`;
 }
+
+export function getReconciliationActionKey(
+  reportId: string,
+): string {
+  return `RECONCILIATION|${reportId}`;
+}

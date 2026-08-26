@@ -7,6 +7,7 @@ import {
   getManualVerificationActionKey,
   getRemittanceEmailActionKey,
   getGoogleSheetsExportActionKey,
+  getReconciliationActionKey,
 } from "./verification-action-key";
 
 describe("Verification action keys", () => {
@@ -66,6 +67,14 @@ describe("Verification action keys", () => {
       ),
     ).toBe(
       "EXPORT|GOOGLE_SHEETS|2026-08-25|2026-08-25T06:45:00.000Z",
+    );
+  });
+
+  it("creates a stable reconciliation action key", () => {
+    expect(
+      getReconciliationActionKey("report-123"),
+    ).toBe(
+      "RECONCILIATION|report-123",
     );
   });
 });

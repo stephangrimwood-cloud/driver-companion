@@ -109,7 +109,8 @@ export type FinanceAgentLogType =
   | "REMITTANCE"
   | "ACCOUNT_BOOKING"
   | "BACKUP"
-  | "EXPORT";
+  | "EXPORT"
+  | "RECONCILIATION";
 
   export interface FinanceAgentLogRecord {
     reference: string;
