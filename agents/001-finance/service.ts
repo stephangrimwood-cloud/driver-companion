@@ -14,6 +14,7 @@ import {
 import {
   getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
+  getErrorActionKey,
   getRemittanceEmailActionKey,
 } from "./verification-action-key";
 
@@ -22,13 +23,15 @@ export class FinanceService {
   private sheets = new SheetsAgent();
 
   async initialise(): Promise<void> {
+
+    try {
     const remittanceRecords =
       await this.gmail.initialise();
 
     const accountBookingRecords =
       await this.gmail.initialiseAccountBookings();
 
-    void this.sheets.readSpreadsheetTitle();
+    await this.sheets.readSpreadsheetTitle();
 
     let financialYearLedgers =
       await this.sheets.readFinancialYearLedgers();
@@ -305,6 +308,36 @@ Proposed Action: None — manual review required
 NO SHEET CHANGES MADE
 `);
       }
+    }
+      } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      const occurredAt = new Date().toISOString();
+
+      try {
+        await this.sheets.writeFinanceAgentLogRecord({
+          reference: "FINANCE_AGENT",
+          type: "ERROR",
+          loggedAt: occurredAt,
+          source:
+            `FINANCE_INITIALISE — ${errorMessage}`,
+          actionKey: getErrorActionKey(
+            "FINANCE_INITIALISE",
+            "FINANCE_AGENT",
+            occurredAt,
+          ),
+        });
+      } catch (logError) {
+        console.error(
+          "Unable to log Finance Agent processing error:",
+          logError,
+        );
+      }
+
+      throw error;
     }
   }
 

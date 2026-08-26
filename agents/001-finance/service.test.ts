@@ -280,7 +280,22 @@ describe("FinanceService Account Booking logging", () => {
 
     expect(
       writeFinanceAgentLogRecordMock,
-    ).not.toHaveBeenCalled();
+    ).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "ACCOUNT_BOOKING",
+      }),
+    );
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reference: "FINANCE_AGENT",
+        type: "ERROR",
+        source:
+          "FINANCE_INITIALISE — Ledger note write failed",
+      }),
+    );
   });
 });
 
@@ -353,20 +368,20 @@ describe("FinanceService remittance email logging", () => {
 
   it("does not log a remittance email when a payment line is unresolved", async () => {
     gmailInitialiseMock.mockResolvedValue([
-        {
+      {
         validationStatus: "VALID",
         messageId: "remittance-message-id",
         paymentReference: "CTL-16082026",
         paymentLines: [
-            {
+          {
             invoiceDate: "16 Aug 2026",
             reference: "16082026",
             invoiceTotal: 999,
             amountPaid: 999,
             stillOwing: 0,
-            },
+          },
         ],
-        },
+      },
     ]);
 
     const service = new FinanceService();
@@ -374,56 +389,111 @@ describe("FinanceService remittance email logging", () => {
     await service.initialise();
 
     expect(
-        writeFinanceAgentLogRecordMock,
+      writeFinanceAgentLogRecordMock,
     ).not.toHaveBeenCalled();
+  });
+
+  it("logs a remittance email when the matching ledger row is already Verified", async () => {
+    readFinancialYearLedgersMock.mockResolvedValue({
+      August: [
+        [
+          "16/08",
+          "$72.40",
+          "$122.90",
+          "$0.00",
+          "$195.30",
+          "CTL Export",
+          "Verified",
+        ],
+      ],
     });
 
-    it("logs a remittance email when the matching ledger row is already Verified", async () => {
-        readFinancialYearLedgersMock.mockResolvedValue({
-            August: [
-            [
-                "16/08",
-                "$72.40",
-                "$122.90",
-                "$0.00",
-                "$195.30",
-                "CTL Export",
-                "Verified",
-            ],
-            ],
-        });
+    gmailInitialiseMock.mockResolvedValue([
+      {
+        validationStatus: "VALID",
+        messageId: "already-verified-message-id",
+        paymentReference: "CTL-16082026",
+        paymentLines: [
+          {
+            invoiceDate: "16 Aug 2026",
+            reference: "16082026",
+            invoiceTotal: 122.9,
+            amountPaid: 122.9,
+            stillOwing: 0,
+          },
+        ],
+      },
+    ]);
 
-        gmailInitialiseMock.mockResolvedValue([
-            {
-            validationStatus: "VALID",
-            messageId: "already-verified-message-id",
-            paymentReference: "CTL-16082026",
-            paymentLines: [
-                {
-                invoiceDate: "16 Aug 2026",
-                reference: "16082026",
-                invoiceTotal: 122.9,
-                amountPaid: 122.9,
-                stillOwing: 0,
-                },
-            ],
-            },
-        ]);
+    const service = new FinanceService();
 
-        const service = new FinanceService();
+    await service.initialise();
 
-        await service.initialise();
+    expect(updateLedgerStatusMock).not.toHaveBeenCalled();
 
-        expect(updateLedgerStatusMock).not.toHaveBeenCalled();
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "REMITTANCE",
+        actionKey:
+          "EMAIL|REMITTANCE|already-verified-message-id",
+      }),
+    );
+  });
+});
 
-        expect(
-            writeFinanceAgentLogRecordMock,
-        ).toHaveBeenCalledWith(
-            expect.objectContaining({
-            type: "REMITTANCE",
-            actionKey:
-                "EMAIL|REMITTANCE|already-verified-message-id",
-            }),
-        );
+describe("FinanceService processing error logging", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
+    );
+  });
+
+  it("logs an ERROR when Finance Agent processing fails", async () => {
+    gmailInitialiseMock.mockRejectedValue(
+      new Error("Gmail processing failed"),
+    );
+
+    const service = new FinanceService();
+
+    await expect(
+      service.initialise(),
+    ).rejects.toThrow("Gmail processing failed");
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledTimes(1);
+
+    const logRecord =
+      writeFinanceAgentLogRecordMock.mock.calls[0][0];
+
+    expect(logRecord).toEqual({
+      reference: "FINANCE_AGENT",
+      type: "ERROR",
+      loggedAt: expect.any(String),
+      source:
+        "FINANCE_INITIALISE — Gmail processing failed",
+      actionKey:
+        `ERROR|FINANCE_INITIALISE|FINANCE_AGENT|${logRecord.loggedAt}`,
     });
+  });
+
+  it("preserves the original processing error when ERROR logging also fails", async () => {
+    gmailInitialiseMock.mockRejectedValue(
+      new Error("Gmail processing failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockRejectedValue(
+      new Error("Error log failed"),
+    );
+
+    const service = new FinanceService();
+
+    await expect(
+      service.initialise(),
+    ).rejects.toThrow("Gmail processing failed");
+  });
 });
