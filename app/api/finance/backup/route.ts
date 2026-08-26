@@ -6,6 +6,7 @@ import { parseReportBackups } from "../../../../agents/001-finance/parser";
 
 import {
   getBackupActionKey,
+  getErrorActionKey,
   getReconciliationActionKey,
 } from "../../../../agents/001-finance/verification-action-key";
 
@@ -15,8 +16,10 @@ import {
 } from "../../../../agents/001-finance/reconciliation";
 
 export async function GET() {
+  let sheets: SheetsAgent | null = null;
+
   try {
-    const sheets = new SheetsAgent();
+    sheets = new SheetsAgent();
 
     const backups = await sheets.readReportBackups();
 
@@ -26,9 +29,36 @@ export async function GET() {
       success: true,
       reports,
     });
-    
   } catch (error) {
     console.error("Unable to read Shift Mate backups:", error);
+
+    if (sheets) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      const occurredAt = new Date().toISOString();
+
+      try {
+        await sheets.writeFinanceAgentLogRecord({
+          reference: "REPORT_BACKUPS",
+          type: "ERROR",
+          loggedAt: occurredAt,
+          source: `BACKUP_READ — ${errorMessage}`,
+          actionKey: getErrorActionKey(
+            "BACKUP_READ",
+            "REPORT_BACKUPS",
+            occurredAt,
+          ),
+        });
+      } catch (logError) {
+        console.error(
+          "Unable to log backup read error:",
+          logError,
+        );
+      }
+    }
 
     return NextResponse.json(
       {
@@ -71,13 +101,43 @@ export async function POST(request: NextRequest) {
         Number(report.driverShare ?? 0),
       );
 
-    await sheets.writeReportBackup(
-      report.id,
-      report.shiftDate,
-      backedUpAt,
-      "0.1.0",
-      JSON.stringify(report),
-    );
+    try {
+  await sheets.writeReportBackup(
+    report.id,
+    report.shiftDate,
+    backedUpAt,
+    "0.1.0",
+    JSON.stringify(report),
+  );
+} catch (error) {
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : String(error);
+
+  const occurredAt = new Date().toISOString();
+
+    try {
+      await sheets.writeFinanceAgentLogRecord({
+        reference: report.id,
+        type: "ERROR",
+        loggedAt: occurredAt,
+        source: `BACKUP_WRITE — ${errorMessage}`,
+        actionKey: getErrorActionKey(
+          "BACKUP_WRITE",
+          report.id,
+          occurredAt,
+        ),
+      });
+    } catch (logError) {
+      console.error(
+        "Unable to log backup processing error:",
+        logError,
+      );
+    }
+
+    throw error;
+  }
 
     await sheets.writeFinanceAgentLogRecord({
       reference: report.id,
@@ -150,7 +210,37 @@ export async function DELETE(request: NextRequest) {
 
     const sheets = new SheetsAgent();
 
-    await sheets.deleteReportBackup(reportId);
+    try {
+      await sheets.deleteReportBackup(reportId);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
+      const occurredAt = new Date().toISOString();
+
+      try {
+        await sheets.writeFinanceAgentLogRecord({
+          reference: reportId,
+          type: "ERROR",
+          loggedAt: occurredAt,
+          source: `BACKUP_DELETE — ${errorMessage}`,
+          actionKey: getErrorActionKey(
+            "BACKUP_DELETE",
+            reportId,
+            occurredAt,
+          ),
+        });
+      } catch (logError) {
+        console.error(
+          "Unable to log backup deletion error:",
+          logError,
+        );
+      }
+
+      throw error;
+    }
 
     return NextResponse.json({
       success: true,

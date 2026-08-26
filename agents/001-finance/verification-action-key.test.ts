@@ -4,6 +4,7 @@ import {
   getAccountBookingEmailActionKey,
   getAutomaticVerificationActionKey,
   getBackupActionKey,
+  getErrorActionKey,
   getManualVerificationActionKey,
   getRemittanceEmailActionKey,
   getGoogleSheetsExportActionKey,
@@ -75,6 +76,18 @@ describe("Verification action keys", () => {
       getReconciliationActionKey("report-123"),
     ).toBe(
       "RECONCILIATION|report-123",
+    );
+  });
+
+  it("creates a stable processing error action key", () => {
+    expect(
+      getErrorActionKey(
+        "BACKUP_WRITE",
+        "report-123",
+        "2026-08-26T02:45:00.000Z",
+      ),
+    ).toBe(
+      "ERROR|BACKUP_WRITE|report-123|2026-08-26T02:45:00.000Z",
     );
   });
 });

@@ -8,10 +8,14 @@ import {
 import { NextRequest } from "next/server";
 
 const {
+  readReportBackupsMock,
   writeReportBackupMock,
+  deleteReportBackupMock,
   writeFinanceAgentLogRecordMock,
 } = vi.hoisted(() => ({
+  readReportBackupsMock: vi.fn(),
   writeReportBackupMock: vi.fn(),
+  deleteReportBackupMock: vi.fn(),
   writeFinanceAgentLogRecordMock: vi.fn(),
 }));
 
@@ -22,11 +26,13 @@ vi.mock(
       writeReportBackup = writeReportBackupMock;
       writeFinanceAgentLogRecord =
         writeFinanceAgentLogRecordMock;
+      deleteReportBackup = deleteReportBackupMock;
+      readReportBackups = readReportBackupsMock; 
     },
   }),
 );
 
-import { POST } from "./route";
+import { DELETE, GET, POST } from "./route";
 
 describe("POST /api/finance/backup", () => {
   beforeEach(() => {
@@ -80,32 +86,44 @@ describe("POST /api/finance/backup", () => {
     });
   });
 
-  it("does not log a backup action when the backup write fails", async () => {
+  it("logs an ERROR when the backup write fails", async () => {
     writeReportBackupMock.mockRejectedValue(
-        new Error("Backup write failed"),
+      new Error("Backup write failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
     );
 
     const request = new NextRequest(
-        "http://localhost/api/finance/backup",
-        {
+      "http://localhost/api/finance/backup",
+      {
         method: "POST",
         body: JSON.stringify({
-            id: "report-123",
-            shiftDate: "2026-08-25",
+          id: "report-123",
+          shiftDate: "2026-08-25",
         }),
         headers: {
-            "Content-Type": "application/json",
+          "Content-Type": "application/json",
         },
-        },
+      },
     );
 
     const response = await POST(request);
 
     expect(response.status).toBe(500);
 
-    expect(
-        writeFinanceAgentLogRecordMock,
-    ).not.toHaveBeenCalled();
+    const logRecord =
+      writeFinanceAgentLogRecordMock.mock.calls[0]?.[0];
+
+    expect(logRecord).toEqual({
+      reference: "report-123",
+      type: "ERROR",
+      loggedAt: expect.any(String),
+      source: "BACKUP_WRITE — Backup write failed",
+      actionKey:
+        `ERROR|BACKUP_WRITE|report-123|${logRecord.loggedAt}`,
+    });
   });
 
   it("keeps the backup successful when reconciliation logging fails", async () => {
@@ -225,5 +243,153 @@ describe("POST /api/finance/backup", () => {
           "RECONCILIATION|report-456",
       }),
     );
+  });
+
+  it("preserves the original backup error when ERROR logging also fails", async () => {
+    writeReportBackupMock.mockRejectedValue(
+      new Error("Backup write failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockRejectedValue(
+      new Error("Error log failed"),
+    );
+
+    const request = new NextRequest(
+      "http://localhost/api/finance/backup",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          id: "report-123",
+          shiftDate: "2026-08-25",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const response = await POST(request);
+    const result = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(result.message).toBe("Backup write failed");
+  });
+
+  it("logs an ERROR when deleting a backup fails", async () => {
+    deleteReportBackupMock.mockRejectedValue(
+      new Error("Backup delete failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
+    );
+
+    const request = new NextRequest(
+      "http://localhost/api/finance/backup",
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          reportId: "report-123",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+
+    expect(response.status).toBe(500);
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledTimes(1);
+
+    const logRecord =
+      writeFinanceAgentLogRecordMock.mock.calls[0][0];
+
+    expect(logRecord).toEqual({
+      reference: "report-123",
+      type: "ERROR",
+      loggedAt: expect.any(String),
+      source: "BACKUP_DELETE — Backup delete failed",
+      actionKey:
+        `ERROR|BACKUP_DELETE|report-123|${logRecord.loggedAt}`,
+    });
+  });
+
+  it("preserves the original delete error when ERROR logging also fails", async () => {
+    deleteReportBackupMock.mockRejectedValue(
+      new Error("Backup delete failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockRejectedValue(
+      new Error("Error log failed"),
+    );
+
+    const request = new NextRequest(
+      "http://localhost/api/finance/backup",
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          reportId: "report-123",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const response = await DELETE(request);
+    const result = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(result.message).toBe("Backup delete failed");
+  });
+
+  it("logs an ERROR when reading backups fails", async () => {
+    readReportBackupsMock.mockRejectedValue(
+      new Error("Backup read failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockResolvedValue(
+      undefined,
+    );
+
+    const response = await GET();
+
+    expect(response.status).toBe(500);
+
+    expect(
+      writeFinanceAgentLogRecordMock,
+    ).toHaveBeenCalledTimes(1);
+
+    const logRecord =
+      writeFinanceAgentLogRecordMock.mock.calls[0][0];
+
+    expect(logRecord).toEqual({
+      reference: "REPORT_BACKUPS",
+      type: "ERROR",
+      loggedAt: expect.any(String),
+      source: "BACKUP_READ — Backup read failed",
+      actionKey:
+        `ERROR|BACKUP_READ|REPORT_BACKUPS|${logRecord.loggedAt}`,
+    });
+  });
+
+  it("preserves the original read error when ERROR logging also fails", async () => {
+    readReportBackupsMock.mockRejectedValue(
+      new Error("Backup read failed"),
+    );
+
+    writeFinanceAgentLogRecordMock.mockRejectedValue(
+      new Error("Error log failed"),
+    );
+
+    const response = await GET();
+    const result = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(result.message).toBe("Backup read failed");
   });
 });

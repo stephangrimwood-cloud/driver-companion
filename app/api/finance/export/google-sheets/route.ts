@@ -7,6 +7,7 @@ import {
   getWorksheetRow,
 } from "../../../../../agents/001-finance/worksheet";
 import {
+  getErrorActionKey,
   getGoogleSheetsExportActionKey,
 } from "../../../../../agents/001-finance/verification-action-key";
 
@@ -31,11 +32,41 @@ export async function POST(request: NextRequest) {
 
     const sheets = new SheetsAgent();
 
-    await sheets.writeReportRow(
-      sheetName,
-      rowNumber,
-      row,
-    );
+    try {
+  await sheets.writeReportRow(
+    sheetName,
+    rowNumber,
+    row,
+  );
+} catch (error) {
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : String(error);
+
+  const occurredAt = new Date().toISOString();
+
+    try {
+      await sheets.writeFinanceAgentLogRecord({
+        reference: shiftDate,
+        type: "ERROR",
+        loggedAt: occurredAt,
+        source: `EXPORT_WRITE — ${errorMessage}`,
+        actionKey: getErrorActionKey(
+          "EXPORT_WRITE",
+          shiftDate,
+          occurredAt,
+        ),
+      });
+    } catch (logError) {
+      console.error(
+        "Unable to log export processing error:",
+        logError,
+      );
+    }
+
+    throw error;
+  }
 
     await sheets.writeFinanceAgentLogRecord({
       reference: shiftDate,

@@ -126,7 +126,7 @@ describe(
       });
     });
 
-    it("does not log an export action when the ledger write fails", async () => {
+    it("logs an ERROR when the ledger write fails", async () => {
       writeReportRowMock.mockRejectedValue(
         new Error("Ledger export failed"),
       );
@@ -155,7 +155,53 @@ describe(
 
       expect(
         writeFinanceAgentLogRecordMock,
-      ).not.toHaveBeenCalled();
+      ).toHaveBeenCalledTimes(1);
+
+      const logRecord =
+        writeFinanceAgentLogRecordMock.mock.calls[0][0];
+
+      expect(logRecord).toEqual({
+        reference: "2026-08-25",
+        type: "ERROR",
+        loggedAt: expect.any(String),
+        source: "EXPORT_WRITE — Ledger export failed",
+        actionKey:
+          `ERROR|EXPORT_WRITE|2026-08-25|${logRecord.loggedAt}`,
+      });
+    });
+
+    it("preserves the original export error when ERROR logging also fails", async () => {
+      writeReportRowMock.mockRejectedValue(
+        new Error("Ledger export failed"),
+      );
+
+      writeFinanceAgentLogRecordMock.mockRejectedValue(
+        new Error("Error log failed"),
+      );
+
+      const request = new NextRequest(
+        "http://localhost/api/finance/export/google-sheets",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            reports: [
+              {
+                id: "report-123",
+                shiftDate: "2026-08-25",
+              },
+            ],
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const response = await POST(request);
+      const result = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(result.message).toBe("Ledger export failed");
     });
   },
 );

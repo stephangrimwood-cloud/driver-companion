@@ -42,3 +42,11 @@ export function getReconciliationActionKey(
 ): string {
   return `RECONCILIATION|${reportId}`;
 }
+
+export function getErrorActionKey(
+  operation: string,
+  reference: string,
+  occurredAt: string,
+): string {
+  return `ERROR|${operation}|${reference}|${occurredAt}`;
+}
