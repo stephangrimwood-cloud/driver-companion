@@ -43,6 +43,10 @@ export async function getMissingReports(
   );
 }
 
+export async function getAllCloudReports(): Promise<RestorableReport[]> {
+  return fetchCloudReports();
+}
+
 export async function checkForMissingReports(
   localReports: LocalReportReference[],
 ): Promise<number> {

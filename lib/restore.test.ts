@@ -7,6 +7,7 @@ import {
 } from "vitest";
 
 import {
+  getAllCloudReports,
   getCloudBackupSummary,
   getMissingReports,
   mergeMissingReports,
@@ -90,6 +91,36 @@ describe("Cloud backup summary", () => {
     await expect(
         getCloudBackupSummary([]),
     ).rejects.toThrow("Cloud backup response was invalid.");
+    });
+
+    it("returns all cloud reports without filtering", async () => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            success: true,
+            reports: [
+              {
+                id: "report-1",
+                createdAt: "2026-08-04T10:00:00.000Z",
+                shiftDate: "2026-08-04",
+              },
+              {
+                id: "report-2",
+                createdAt: "2026-08-05T10:00:00.000Z",
+                shiftDate: "2026-08-05",
+              },
+            ],
+          }),
+        }),
+      );
+
+      const reports = await getAllCloudReports();
+
+      expect(reports).toHaveLength(2);
+      expect(reports[0].id).toBe("report-1");
+      expect(reports[1].id).toBe("report-2");
     });
 
     describe("Missing cloud reports", () => {

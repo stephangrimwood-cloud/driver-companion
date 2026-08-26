@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  getAllCloudReports,
   getCloudBackupSummary,
   getMissingReports,
   mergeMissingReports,
@@ -11,6 +12,9 @@ import {
 
 const REPORTS_STORAGE_KEY = "shift-mate-reports";
 const LEGACY_REPORTS_STORAGE_KEY = "driver-companion-reports";
+
+const REPORTS_REPLACEMENT_BACKUP_KEY =
+  "shift-mate-reports-replacement-backup";
 
 const WEEK_DAYS = [
   "Monday",
@@ -185,6 +189,18 @@ function storeReports(reports: Report[]) {
   localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(reports));
 }
 
+function backupReportsBeforeReplacement(
+  reports: Report[],
+) {
+  localStorage.setItem(
+    REPORTS_REPLACEMENT_BACKUP_KEY,
+    JSON.stringify({
+      backedUpAt: new Date().toISOString(),
+      reports,
+    }),
+  );
+}
+
 export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [openDate, setOpenDate] = useState<string | null>(null);
@@ -194,7 +210,12 @@ export default function ReportsPage() {
   const [cloudSummary, setCloudSummary] =
     useState<CloudBackupSummary | null>(null);
   const [isRestoringReports, setIsRestoringReports] = useState(false);
-  const [restoreMessage, setRestoreMessage] = useState("");    
+  const [restoreMessage, setRestoreMessage] = useState("");
+  
+  const [
+    showReplaceConfirmation,
+    setShowReplaceConfirmation,
+  ] = useState(false);
 
   const [exportingReportId, setExportingReportId] = useState<string | null>(
     null,
@@ -426,6 +447,64 @@ export default function ReportsPage() {
     }
   }
 
+  async function replaceAllLocalReportsFromCloud() {
+    setIsRestoringReports(true);
+    setRestoreMessage("");
+
+    try {
+      const cloudReports = await getAllCloudReports();
+
+      const restoredReports: Report[] = cloudReports.map(
+        (report) => ({
+          ...report,
+          backedUpToGoogleSheets: true,
+          backupError: undefined,
+        }),
+      );
+
+      const replacementReports = mergeMissingReports(
+        [],
+        restoredReports,
+      );
+
+      const existingLocalReports = loadReports();
+
+      backupReportsBeforeReplacement(
+        existingLocalReports,
+      );
+
+      localStorage.setItem(
+        REPORTS_STORAGE_KEY,
+        JSON.stringify(replacementReports),
+      );
+
+      setReports(replacementReports);
+
+      setCloudSummary({
+        cloudReportCount: replacementReports.length,
+        localReportCount: replacementReports.length,
+        missingReportCount: 0,
+      });
+
+      setRestoreMessage(
+        replacementReports.length === 1
+          ? "✓ 1 local report replaced from cloud backup."
+          : `✓ ${replacementReports.length} local reports replaced from cloud backup.`,
+      );
+    } catch (error) {
+      console.error(
+        "Unable to replace local reports from cloud:",
+        error,
+      );
+
+      setRestoreMessage(
+        "Replacement failed. Existing local reports were not changed.",
+      );
+    } finally {
+      setIsRestoringReports(false);
+    }
+  }
+
   return (
 
     <main className="min-h-screen bg-gradient-to-b from-[#2f2f30] via-[#2b2b2c] to-[#242425] p-5 text-zinc-100">
@@ -570,6 +649,58 @@ export default function ReportsPage() {
                         cloudSummary.missingReportCount === 1 ? "" : "s"
                       }`}
                 </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowReplaceConfirmation(true)}
+                disabled={isRestoringReports}
+                className="mt-3 w-full rounded-xl border border-zinc-700 bg-zinc-900/40 px-4 py-3 text-sm font-semibold text-zinc-300 transition hover:bg-zinc-800/60 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Advanced: Replace All Local Reports
+              </button>
+
+              {showReplaceConfirmation && (
+                <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/10 p-4">
+                  <p className="text-sm font-semibold text-amber-200">
+                    ⚠ Replace all local reports?
+                  </p>
+
+                  <p className="mt-2 text-sm text-zinc-300">
+                    This will replace every Shift Mate report stored on
+                    this device with the reports currently held in the
+                    cloud backup.
+                  </p>
+
+                  <p className="mt-2 text-sm text-zinc-400">
+                    Any local-only reports will be removed from the active
+                    report list. A local safety backup will be created
+                    automatically before replacement.
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowReplaceConfirmation(false)}
+                      disabled={isRestoringReports}
+                      className="rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-3 text-sm font-semibold text-zinc-300"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowReplaceConfirmation(false);
+                        void replaceAllLocalReportsFromCloud();
+                      }}
+                      disabled={isRestoringReports}
+                      className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-3 text-sm font-semibold text-amber-200"
+                    >
+                      Yes, Replace All
+                    </button>
+                  </div>
+                </div>
               )}
 
               {restoreMessage && (
