@@ -44,3 +44,6 @@ next-env.d.ts
 secrets/
 
 agents/001-finance/downloads/
+
+test-results/
+playwright-report/

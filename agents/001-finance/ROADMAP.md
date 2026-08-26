@@ -207,7 +207,7 @@
 - [x] Add an advanced option to replace all local reports.
 - [x] Require an explicit warning and confirmation before replacement.
 - [x] Create an automatic local backup before replacing reports.
-- [ ] Add automated browser-level end-to-end backup and restore tests.
+- [x] Add automated browser-level end-to-end backup and restore tests.
 - [ ] Add coordinated deletion options for local reports, cloud backups and ledger entries.
 
 ---
