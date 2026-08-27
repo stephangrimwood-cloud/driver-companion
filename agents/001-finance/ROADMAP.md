@@ -202,13 +202,13 @@
 - [x] Confirm report backup works over the mobile network.
 - [x] Confirm monthly ledger export works over the mobile network.
 
-### Future Recovery Enhancements 📋 Planned
+### Future Recovery Enhancements ✅ Complete
 
 - [x] Add an advanced option to replace all local reports.
 - [x] Require an explicit warning and confirmation before replacement.
 - [x] Create an automatic local backup before replacing reports.
 - [x] Add automated browser-level end-to-end backup and restore tests.
-- [ ] Add coordinated deletion options for local reports, cloud backups and ledger entries.
+- [x] Add coordinated deletion options for local reports, cloud backups and ledger entries.
 
 ---
 
