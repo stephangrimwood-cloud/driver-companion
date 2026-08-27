@@ -106,3 +106,53 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { shiftDate } = await request.json();
+
+    if (!shiftDate || typeof shiftDate !== "string") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Shift date is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const sheetName = getWorksheetName(shiftDate);
+    const rowNumber = getWorksheetRow(shiftDate);
+    const sheets = new SheetsAgent();
+
+    await sheets.clearReportRow(
+      sheetName,
+      rowNumber,
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Ledger row cleared from ${sheetName}, row ${rowNumber}.`,
+    });
+  } catch (error) {
+    console.error(
+      "Unable to clear Shift Mate ledger row:",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to clear ledger row.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}

@@ -217,6 +217,11 @@ export default function ReportsPage() {
     setShowReplaceConfirmation,
   ] = useState(false);
 
+  const [
+    reportIdPendingDeletion,
+    setReportIdPendingDeletion,
+  ] = useState<string | null>(null);
+
   const [exportingReportId, setExportingReportId] = useState<string | null>(
     null,
   );
@@ -304,35 +309,91 @@ export default function ReportsPage() {
     setNoteText("");
   }
 
-  async function deleteReport(reportId: string) {
-  try {
-    const response = await fetch("/api/finance/backup", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        reportId,
-      }),
-    });
+  async function deleteReport(
+    reportId: string,
+    updateLedger: boolean,
+  ) {
+    const reportToDelete = reports.find(
+      (report) => report.id === reportId,
+    );
 
-    if (!response.ok) {
-      throw new Error("Unable to delete cloud backup.");
+    if (!reportToDelete) {
+      alert("Unable to find the selected report.");
+      return;
     }
 
     const updatedReports = reports.filter(
       (report) => report.id !== reportId,
     );
 
-    updateReports(updatedReports);
-  } catch (error) {
-    console.error("Unable to delete report:", error);
-
-    alert(
-      "Unable to delete the report from cloud backup. The report has not been removed.",
+    const remainingReportsForDate = updatedReports.filter(
+      (report) =>
+        report.shiftDate === reportToDelete.shiftDate,
     );
+
+    try {
+      const backupResponse = await fetch(
+        "/api/finance/backup",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reportId,
+          }),
+        },
+      );
+
+      if (!backupResponse.ok) {
+        throw new Error("Unable to delete cloud backup.");
+      }
+
+      if (updateLedger) {
+        const ledgerResponse =
+          remainingReportsForDate.length > 0
+            ? await fetch(
+                "/api/finance/export/google-sheets",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    reports: remainingReportsForDate,
+                  }),
+                },
+              )
+            : await fetch(
+                "/api/finance/export/google-sheets",
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    shiftDate: reportToDelete.shiftDate,
+                  }),
+                },
+              );
+
+        if (!ledgerResponse.ok) {
+          throw new Error(
+            "Unable to update the monthly ledger.",
+          );
+        }
+      }
+
+      updateReports(updatedReports);
+      setReportIdPendingDeletion(null);
+    } catch (error) {
+      console.error("Unable to delete report:", error);
+
+      alert(
+        "The coordinated deletion could not be completed. The local report has been kept so the operation can be retried.",
+      );
+    }
   }
-}
 
   async function exportToGoogleSheets(report: Report) {
     setExportingReportId(report.id);
@@ -1009,11 +1070,62 @@ export default function ReportsPage() {
 
                             <button
                               type="button"
-                              onClick={() => deleteReport(report.id)}
+                              onClick={() =>
+                                setReportIdPendingDeletion(report.id)
+                              }
                               className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/20"
                             >
                               Delete Report
                             </button>
+
+                            {reportIdPendingDeletion === report.id && (
+                              <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 p-4">
+                                <p className="text-sm font-semibold text-red-200">
+                                  Delete this report?
+                                </p>
+
+                                <p className="mt-2 text-sm text-zinc-300">
+                                  The local report and its cloud backup will be
+                                  deleted.
+                                </p>
+
+                                <p className="mt-2 text-sm text-zinc-400">
+                                  Choose whether the monthly ledger should remain
+                                  unchanged or be recalculated from the reports still
+                                  stored for this date.
+                                </p>
+
+                                <div className="mt-4 grid gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setReportIdPendingDeletion(null)}
+                                    className="rounded-xl border border-zinc-700 bg-zinc-900/40 px-3 py-3 text-sm font-semibold text-zinc-300"
+                                  >
+                                    Cancel
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      void deleteReport(report.id, false);
+                                    }}
+                                    className="rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-3 text-sm font-semibold text-red-200"
+                                  >
+                                    Delete Report Only
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      void deleteReport(report.id, true);
+                                    }}
+                                    className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-3 py-3 text-sm font-semibold text-amber-200"
+                                  >
+                                    Delete and Update Ledger
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );

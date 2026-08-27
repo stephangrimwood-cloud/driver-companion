@@ -10,10 +10,12 @@ const {
   getMock,
   updateMock,
   appendMock,
+  clearMock,
 } = vi.hoisted(() => ({
   getMock: vi.fn(),
   updateMock: vi.fn(),
   appendMock: vi.fn(),
+  clearMock: vi.fn(),
 }));
 
 vi.mock("./auth", () => ({
@@ -23,6 +25,7 @@ vi.mock("./auth", () => ({
         get: getMock,
         update: updateMock,
         append: appendMock,
+        clear: clearMock,
       },
     },
   }),
@@ -512,3 +515,24 @@ describe("SheetsAgent generic Finance Agent logging", () => {
     );
   });
 });
+
+describe("SheetsAgent report rows", () => {
+      beforeEach(() => {
+        vi.clearAllMocks();
+      });
+
+      it("clears the complete monthly ledger row", async () => {
+        clearMock.mockResolvedValue({
+          data: {},
+        });
+
+        const sheets = new SheetsAgent();
+
+        await sheets.clearReportRow("August", 26);
+
+        expect(clearMock).toHaveBeenCalledWith({
+          spreadsheetId: "test-spreadsheet",
+          range: "'August'!A26:G26",
+        });
+      });
+    });

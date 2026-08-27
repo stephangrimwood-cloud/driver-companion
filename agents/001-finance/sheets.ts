@@ -51,6 +51,20 @@ export class SheetsAgent {
     );
   }
 
+  async clearReportRow(
+    sheetName: string,
+    rowNumber: number,
+  ): Promise<void> {
+    await this.client.spreadsheets.values.clear({
+      spreadsheetId: this.config.spreadsheet_id,
+      range: `'${sheetName}'!A${rowNumber}:G${rowNumber}`,
+    });
+
+    console.log(
+      `✓ Report row cleared from '${sheetName}' row ${rowNumber}.`,
+    );
+  }
+
   async writeReportBackup(
     reportId: string,
     shiftDate: string,
