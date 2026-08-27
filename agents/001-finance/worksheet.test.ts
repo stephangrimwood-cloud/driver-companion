@@ -6,6 +6,7 @@ import {
   getWorksheetNameFromReference,
   getWorksheetRow,
   getFinancialYearWorksheetNameFromReference,
+  getFinancialYearStartYearFromWorkbookTitle,
 } from "./worksheet";
 
 describe("Worksheet resolver", () => {
@@ -84,5 +85,37 @@ describe("Worksheet resolver", () => {
         2026,
       ),
     ).toBeNull();
+  });
+
+  it("derives the financial-year start from the workbook title", () => {
+    expect(
+      getFinancialYearStartYearFromWorkbookTitle(
+        "Taxi Business Records v2.0 - 2026 - 2027",
+      ),
+    ).toBe(2026);
+
+    expect(
+      getFinancialYearStartYearFromWorkbookTitle(
+        "Taxi Business Records 2027–2028",
+      ),
+    ).toBe(2027);
+  });
+
+  it("rejects an invalid workbook financial-year range", () => {
+    expect(() =>
+      getFinancialYearStartYearFromWorkbookTitle(
+        "Taxi Business Records",
+      ),
+    ).toThrow(
+      "The workbook title must contain a financial-year range",
+    );
+
+    expect(() =>
+      getFinancialYearStartYearFromWorkbookTitle(
+        "Taxi Business Records 2026-2028",
+      ),
+    ).toThrow(
+      "The workbook financial-year end must be one year after its start",
+    );
   });
 });

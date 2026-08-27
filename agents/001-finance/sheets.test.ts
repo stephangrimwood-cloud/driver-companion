@@ -7,11 +7,13 @@ import {
 } from "vitest";
 
 const {
+  spreadsheetGetMock,
   getMock,
   updateMock,
   appendMock,
   clearMock,
 } = vi.hoisted(() => ({
+  spreadsheetGetMock: vi.fn(),
   getMock: vi.fn(),
   updateMock: vi.fn(),
   appendMock: vi.fn(),
@@ -21,6 +23,7 @@ const {
 vi.mock("./auth", () => ({
   createGoogleSheetsClient: () => ({
     spreadsheets: {
+      get: spreadsheetGetMock,
       values: {
         get: getMock,
         update: updateMock,
@@ -536,3 +539,49 @@ describe("SheetsAgent report rows", () => {
         });
       });
     });
+
+    describe("SheetsAgent workbook title", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns the connected workbook title", async () => {
+    spreadsheetGetMock.mockResolvedValue({
+      data: {
+        properties: {
+          title:
+            "Taxi Business Records v2.0 - 2026 - 2027",
+        },
+      },
+    });
+
+    const sheets = new SheetsAgent();
+
+    await expect(
+      sheets.readSpreadsheetTitle(),
+    ).resolves.toBe(
+      "Taxi Business Records v2.0 - 2026 - 2027",
+    );
+
+    expect(spreadsheetGetMock).toHaveBeenCalledWith({
+      spreadsheetId: "test-spreadsheet",
+      fields: "properties.title",
+    });
+  });
+
+  it("rejects a workbook with no title", async () => {
+    spreadsheetGetMock.mockResolvedValue({
+      data: {
+        properties: {},
+      },
+    });
+
+    const sheets = new SheetsAgent();
+
+    await expect(
+      sheets.readSpreadsheetTitle(),
+    ).rejects.toThrow(
+      "Google Sheets workbook title was not found.",
+    );
+  });
+});

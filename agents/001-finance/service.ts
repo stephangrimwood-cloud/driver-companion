@@ -9,6 +9,7 @@ import {
   matchAccountBookingRecordAcrossLedgers,
 } from "./account-booking-matcher";
 import {
+  getFinancialYearStartYearFromWorkbookTitle,
   getFinancialYearWorksheetNameFromReference,
 } from "./worksheet";
 import {
@@ -31,7 +32,17 @@ export class FinanceService {
     const accountBookingRecords =
       await this.gmail.initialiseAccountBookings();
 
-    await this.sheets.readSpreadsheetTitle();
+    const workbookTitle =
+      await this.sheets.readSpreadsheetTitle();
+
+    const financialYearStartYear =
+      getFinancialYearStartYearFromWorkbookTitle(
+        workbookTitle,
+      );
+
+    console.log(
+      `Active financial year: ${financialYearStartYear}-${financialYearStartYear + 1}`,
+    );
 
     let financialYearLedgers =
       await this.sheets.readFinancialYearLedgers();
@@ -50,7 +61,7 @@ export class FinanceService {
           matchAccountBookingRecordAcrossLedgers(
             accountBookingRecord,
             financialYearLedgers,
-            2026,
+            financialYearStartYear,
           );
 
         console.log(`
@@ -140,7 +151,7 @@ NO SHEET CHANGES MADE
           const sheetName =
             getFinancialYearWorksheetNameFromReference(
               paymentLine.reference,
-              2026,
+              financialYearStartYear,
             );
 
           if (!sheetName) {

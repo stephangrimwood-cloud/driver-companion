@@ -20,16 +20,26 @@ export class SheetsAgent {
   private client = createGoogleSheetsClient();
   private config = loadGoogleSheetsConfig();
 
-  async readSpreadsheetTitle(): Promise<void> {
+  async readSpreadsheetTitle(): Promise<string> {
     const response = await this.client.spreadsheets.get({
       spreadsheetId: this.config.spreadsheet_id,
       fields: "properties.title",
     });
 
+    const title = response.data.properties?.title;
+
+    if (!title) {
+      throw new Error(
+        "Google Sheets workbook title was not found.",
+      );
+    }
+
     console.log(
       "Google Sheets connected:",
-      response.data.properties?.title ?? "(Unknown title)",
+      title,
     );
+
+    return title;
   }
 
   async writeReportRow(

@@ -51,6 +51,31 @@ export function getFinancialYearWorksheetNames():
   return [...FINANCIAL_YEAR_MONTHS];
 }
 
+export function getFinancialYearStartYearFromWorkbookTitle(
+  workbookTitle: string,
+): number {
+  const yearRange = workbookTitle.match(
+    /\b(\d{4})\s*[-–—]\s*(\d{4})\b/,
+  );
+
+  if (!yearRange) {
+    throw new Error(
+      "The workbook title must contain a financial-year range such as 2026-2027.",
+    );
+  }
+
+  const startYear = Number(yearRange[1]);
+  const endYear = Number(yearRange[2]);
+
+  if (endYear !== startYear + 1) {
+    throw new Error(
+      "The workbook financial-year end must be one year after its start.",
+    );
+  }
+
+  return startYear;
+}
+
 export function getWorksheetNameFromReference(
   reference: string,
 ): string | null {

@@ -301,8 +301,8 @@
 - [x] Read all 12 monthly ledgers before reconciliation.
 - [x] Confirm valid July and August references route correctly.
 - [x] Confirm out-of-financial-year references are rejected.
-- [ ] Remove the hard-coded financial-year start year `2026`.
-- [ ] Derive the active financial year from configuration or workbook context.
+- [x] Remove the hard-coded financial-year start year `2026`.
+- [x] Derive the active financial year from configuration or workbook context.
 
 ### Standard CTL Remittances ✅ Complete
 

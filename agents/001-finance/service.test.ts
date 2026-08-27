@@ -56,7 +56,7 @@ describe("FinanceService automatic verification recovery", () => {
     gmailInitialiseAccountBookingsMock.mockResolvedValue([]);
 
     readSpreadsheetTitleMock.mockResolvedValue(
-      "Taxi Business Records v2.0",
+      "Taxi Business Records v2.0 - 2026 - 2027",
     );
   });
 
@@ -186,7 +186,7 @@ describe("FinanceService Account Booking logging", () => {
     gmailInitialiseMock.mockResolvedValue([]);
 
     readSpreadsheetTitleMock.mockResolvedValue(
-      "Taxi Business Records v2.0",
+      "Taxi Business Records v2.0 - 2026 - 2027",
     );
 
     readFinancialYearLedgersMock.mockResolvedValue({
@@ -306,7 +306,7 @@ describe("FinanceService remittance email logging", () => {
     gmailInitialiseAccountBookingsMock.mockResolvedValue([]);
 
     readSpreadsheetTitleMock.mockResolvedValue(
-      "Taxi Business Records v2.0",
+      "Taxi Business Records v2.0 - 2026 - 2027",
     );
 
     readFinancialYearLedgersMock.mockResolvedValue({
@@ -495,5 +495,87 @@ describe("FinanceService processing error logging", () => {
     await expect(
       service.initialise(),
     ).rejects.toThrow("Gmail processing failed");
+  });
+});
+
+describe("FinanceService financial-year configuration", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    readSpreadsheetTitleMock.mockResolvedValue(
+      "Taxi Business Records v2.0 - 2027 - 2028",
+    );
+
+    readFinancialYearLedgersMock.mockResolvedValue({
+      August: [
+        [
+          "16/08",
+          "$72.40",
+          "$122.90",
+          "$0.00",
+          "$195.30",
+          "CTL Export",
+          "Pending",
+        ],
+      ],
+    });
+
+    matchAccountBookingRecordAcrossLedgersMock.mockReturnValue(
+      null,
+    );
+
+    updateLedgerStatusMock.mockResolvedValue(undefined);
+    writeVerificationRecordMock.mockResolvedValue(undefined);
+    writeFinanceAgentLogRecordMock.mockResolvedValue(undefined);
+  });
+
+  it("derives the next financial year from the workbook title", async () => {
+    const accountBookingRecord = {
+      messageId: "account-booking-2027",
+      validationStatus: "VALID",
+      invoiceDate: "14 Aug 2027",
+      paymentDate: "15 Aug 2027",
+      bookingReference: "8091343",
+      paymentAmount: 19.7,
+    };
+
+    gmailInitialiseAccountBookingsMock.mockResolvedValue([
+      accountBookingRecord,
+    ]);
+
+    gmailInitialiseMock.mockResolvedValue([
+      {
+        validationStatus: "VALID",
+        messageId: "remittance-2027",
+        paymentReference: "CTL-16082027",
+        paymentLines: [
+          {
+            invoiceDate: "16 Aug 2027",
+            reference: "16082027",
+            invoiceTotal: 122.9,
+            amountPaid: 122.9,
+            stillOwing: 0,
+          },
+        ],
+      },
+    ]);
+
+    const service = new FinanceService();
+
+    await service.initialise();
+
+    expect(
+      matchAccountBookingRecordAcrossLedgersMock,
+    ).toHaveBeenCalledWith(
+      accountBookingRecord,
+      expect.any(Object),
+      2027,
+    );
+
+    expect(updateLedgerStatusMock).toHaveBeenCalledWith(
+      "August",
+      1,
+      "Verified",
+    );
   });
 });
